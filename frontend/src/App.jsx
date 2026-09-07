@@ -181,13 +181,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        
+        <DemoWorkspaceProvider>
           <KeyProvider>
             <CurrencyProvider>
               <ErrorBoundary><AppLayout /></ErrorBoundary>
             </CurrencyProvider>
           </KeyProvider>
-        
+        </DemoWorkspaceProvider>
       </AuthProvider>
     </BrowserRouter>
   );

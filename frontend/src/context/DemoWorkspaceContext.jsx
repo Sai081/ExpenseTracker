@@ -51,5 +51,25 @@ export function DemoWorkspaceProvider({ children }) {
 }
 
 export function useDemoWorkspace() {
-  return useContext(DemoWorkspaceContext);
+  const context = useContext(DemoWorkspaceContext);
+  if (!context) {
+    return {
+      isDemo: false,
+      transactions: [],
+      budgets: [],
+      voiceHistory: [],
+      dashboard: {
+        summary: {},
+        recent_transactions: [],
+        budgets: [],
+        category_breakdown: []
+      },
+      removeTransaction: () => {},
+      updateTransaction: () => {},
+      addBudget: () => {},
+      updateBudget: () => {},
+      removeBudget: () => {},
+    };
+  }
+  return context;
 }
