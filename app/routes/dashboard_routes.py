@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, make_response, jsonify
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.datastructures import MultiDict
@@ -67,7 +67,7 @@ def dashboard_home():
     recent_incomes = Income.query.filter_by(user_id=user_id).order_by(Income.date.desc()).limit(5).all()
     recent_expenses = Transaction.query.filter(
         Transaction.user_id == user_id,
-        Transaction.amount < 0
+        Transaction.type == 'expense'
     ).order_by(Transaction.date.desc()).limit(5).all()
     recent_transactions = Transaction.query.filter_by(user_id=user_id).order_by(Transaction.date.desc()).limit(5).all()
 
@@ -485,21 +485,19 @@ def delete_budget(id):
 @login_required
 def insights():
     current_month = datetime.now().strftime('%B')
+    from app.utils.groq_api import get_financial_insights
+    insights_data = get_financial_insights(current_user.id)
+    return render_template('insights.html', insights=insights_data, month=current_month)
 
-    insights_data = {
-        'month': current_month,
-        'spending_trend': {
-            'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data': [12000, 15000, 11000, 13000, 14000, 12500]
-        },
-        'category_breakdown': {
-            'labels': ['Food', 'Transport', 'Entertainment', 'Bills', 'Others'],
-            'data': [35, 25, 15, 15, 10]
-        },
-        'savings_rate': 0.25
-    }
-
-    return render_template('insights.html', insights=insights_data)
+@dashboard_bp.route('/insights/generate', methods=['POST'])
+@login_required
+def generate_insights():
+    from app.utils.groq_api import get_financial_insights
+    try:
+        insights_data = get_financial_insights(current_user.id)
+        return jsonify({"success": True, "insights": insights_data})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 
 @dashboard_bp.route('/export/csv')

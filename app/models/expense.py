@@ -1,13 +1,12 @@
 from sqlalchemy import Column, Integer, Numeric, Date, Text, ForeignKey, String, Boolean
 from sqlalchemy.orm import relationship
 from app import db 
-from flask_login import UserMixin
 
-class Expense(UserMixin,db.Model):
+class Expense(db.Model):
     __tablename__ = 'expense'
 
     id = Column(Integer, primary_key=True)
-    amount = Column(Numeric, nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
     category_id = Column(Integer, ForeignKey('category.id', ondelete='CASCADE'))
     description = Column(Text)
     date = Column(Date, nullable=False)
