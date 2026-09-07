@@ -7,8 +7,7 @@ class Category(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
     type = db.Column(db.String(20), nullable=False, default="expense")
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
 
     transactions = db.relationship('Transaction', back_populates='category', cascade='all, delete')
     expenses = db.relationship('Expense', back_populates='category', cascade='all, delete-orphan')
-    

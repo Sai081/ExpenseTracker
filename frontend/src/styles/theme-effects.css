@@ -1,0 +1,249 @@
+/* ============================================================
+   ExpenseTracker AI — Glass, Telemetry & Motion System
+   ------------------------------------------------------------
+   This defines every custom class referenced across Landing,
+   Login, Navbar, AssistantWidget, VoiceModal, Dashboard, Budgets,
+   and Transactions:
+   apple-glass, apple-glass-pill, apple-glass-card, glass-input,
+   btn-sheen, animate-fade-in, animate-float-slow/reverse,
+   animate-aura-glow, animate-pulse-aura, shimmer-gradient,
+   cursor-blink, soundWaveAlways, no-scrollbar, bg-grid, bg-noise,
+   spotlight, and magnetic-btn.
+   ============================================================ */
+
+:root {
+  --glass-tint: 10, 27, 25;
+  --glass-border: 190, 230, 222;
+  --ink: #071312;
+  --surface: #0b1d1a;
+  --surface-raised: #102723;
+  --line: rgba(190, 230, 222, 0.13);
+  --muted: #91aaa4;
+  --mint: #5eead4;
+  --amber: #fbbf24;
+}
+
+/* ---------------- Glass surfaces ---------------- */
+
+.apple-glass {
+  background: rgba(var(--glass-tint), 0.65);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+
+.apple-glass-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.018)),
+    rgba(var(--glass-tint), 0.82);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--line);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 22px 55px -24px rgba(0, 0, 0, 0.72);
+}
+
+.apple-glass-pill {
+  background: rgba(var(--glass-tint), 0.7);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(var(--glass-border), 0.1);
+}
+
+.glass-input {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 200ms cubic-bezier(0.16, 1, 0.3, 1), background-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-input:focus-within {
+  border-color: rgba(94, 234, 212, 0.65);
+  box-shadow: 0 0 0 3px rgba(94, 234, 212, 0.09);
+}
+
+/* ---------------- Button sheen sweep (on hover) ---------------- */
+
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.25s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.btn-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.35) 48%,
+    rgba(255, 255, 255, 0.05) 54%,
+    transparent 70%
+  );
+  transform: translateX(-130%);
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+  pointer-events: none;
+}
+.btn-sheen:hover::after {
+  transform: translateX(130%);
+}
+.btn-sheen:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+.btn-sheen:active {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* ---------------- Magnetic Button Interactivity ---------------- */
+.magnetic-btn {
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.25s ease;
+  will-change: transform;
+}
+.magnetic-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+.magnetic-btn:active {
+  transform: scale(0.97);
+}
+
+/* ---------------- Simple entrances ---------------- */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.35s ease-out both; }
+
+/* Scroll-triggered reveal */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(28px); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0);    filter: blur(0); }
+}
+.reveal-up { opacity: 0; }
+.reveal-up.is-visible {
+  animation: reveal-up 0.85s cubic-bezier(0.2, 0.7, 0.15, 1) forwards;
+}
+
+/* ---------------- Floating decorative badges ---------------- */
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-14px) rotate(-1deg); }
+}
+.animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+
+@keyframes float-reverse {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(14px) rotate(1deg); }
+}
+.animate-float-reverse { animation: float-reverse 8s ease-in-out infinite; }
+
+/* ---------------- Aurora backdrops ---------------- */
+
+@keyframes aura-glow {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, 0) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%, 0) scale(1.08); }
+}
+.animate-aura-glow { animation: aura-glow 9s ease-in-out infinite; }
+
+@keyframes pulse-aura {
+  0%, 100% { opacity: 0.65; transform: translate(-50%, 0) scale(1); }
+  50%      { opacity: 1;    transform: translate(-50%, 0) scale(1.06); }
+}
+.animate-pulse-aura { animation: pulse-aura 8s ease-in-out infinite; }
+
+/* ---------------- Shimmering headline text ---------------- */
+
+.shimmer-gradient {
+  background: linear-gradient(100deg, #e2f4ff 20%, #67e8f9 40%, #a7f3d0 60%, #fde68a 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer-move 5s linear infinite;
+}
+@keyframes shimmer-move {
+  to { background-position: -200% center; }
+}
+
+/* ---------------- Typewriter caret ---------------- */
+
+@keyframes cursor-blink {
+  0%, 45%  { opacity: 1; }
+  50%, 95% { opacity: 0; }
+  100%     { opacity: 1; }
+}
+.cursor-blink { animation: cursor-blink 1s step-end infinite; }
+
+/* ---------------- Voice waveform bars ---------------- */
+
+@keyframes soundWaveAlways {
+  from { transform: scaleY(0.35); }
+  to   { transform: scaleY(1); }
+}
+
+/* ---------------- Ambient grid + film-grain texture ---------------- */
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(190, 230, 222, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(190, 230, 222, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+}
+
+.bg-noise {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* Ambient app lighting stays behind the interface and never consumes layout space. */
+.ambient-field {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ambient-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(110px);
+  opacity: 0.8;
+}
+
+/* ---------------- Cursor-follow spotlight ---------------- */
+
+.spotlight { position: relative; }
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(480px circle at var(--x, 50%) var(--y, 0%), rgba(34, 211, 238, 0.12), transparent 60%);
+  opacity: var(--spot-opacity, 0);
+  transition: opacity 0.35s ease;
+}
+.spotlight > * { position: relative; z-index: 1; }
+
+/* ---------------- Utility ---------------- */
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-reverse,
+  .animate-aura-glow,
+  .animate-pulse-aura,
+  .shimmer-gradient,
+  .cursor-blink,
+  .reveal-up.is-visible {
+    animation: none !important;
+  }
+  .reveal-up { opacity: 1 !important; filter: none !important; transform: none !important; }
+}

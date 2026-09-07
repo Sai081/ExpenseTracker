@@ -3,7 +3,7 @@ from app import db
 
 from flask_login import UserMixin
 
-class Transaction(UserMixin,db.Model):
+class Transaction(UserMixin, db.Model):
     __tablename__ = 'transaction'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -19,4 +19,4 @@ class Transaction(UserMixin,db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     user = db.relationship('User', backref=db.backref('transactions', lazy=True))
-    category = db.relationship('Category', backref=db.backref('transaction', lazy=True))
+    category = db.relationship('Category', back_populates='transactions')
