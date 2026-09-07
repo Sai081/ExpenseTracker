@@ -175,11 +175,15 @@ export function AddTransactionModal({ isOpen, onClose, onTransactionCreated }) {
               onChange={(e) => setCategoryId(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-2xl glass-input text-white text-xs sm:text-sm focus:outline-none focus:border-cyan-500 transition cursor-pointer"
             >
-              {categoryList.map((c) => (
-                <option key={c.id} value={c.id} className="bg-[#0b1d1a] text-white">
-                  {c.name}
-                </option>
-              ))}
+              {categoryList.map((c, idx) => {
+                const catId = typeof c === "object" && c !== null ? (c.id || idx + 1) : idx + 1;
+                const catName = typeof c === "object" && c !== null ? (c.name || "Category") : String(c);
+                return (
+                  <option key={catId} value={catId} className="bg-[#0b1d1a] text-white">
+                    {catName}
+                  </option>
+                );
+              })}
             </select>
           </div>
 

@@ -155,19 +155,27 @@ export function AuthProvider({ children }) {
             }
           }
         });
-        if (!error && data.session) {
+        if (error) {
+          throw error;
+        }
+        if (data.session) {
           setStoredAuthToken(data.session.access_token);
           const profile = await api.getMe().catch(() => null);
           setUser(profile || { email, username });
-          return;
+          return { success: true };
+        }
+        if (data.user) {
+          return { needsConfirmation: true, email: data.user.email || email };
         }
       } catch (sbErr) {
-        console.warn('Supabase signup fell back to local API:', sbErr);
+        console.warn('Supabase signup error:', sbErr);
+        throw sbErr;
       }
     }
 
     const res = await api.register(email, password, username);
     setUser(res);
+    return { success: true };
   };
 
   const signInDemo = async () => {

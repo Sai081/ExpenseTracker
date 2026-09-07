@@ -11,6 +11,7 @@ import { AddTransactionModal } from './components/AddTransactionModal';
 import { VoiceModal } from './components/VoiceModal';
 import { AssistantWidget } from './components/AssistantWidget';
 import { BYOKModal } from './components/BYOKModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { CustomCursor } from './components/CustomCursor';
 
 import { Docs } from './pages/Docs';
@@ -183,7 +184,7 @@ export default function App() {
         
           <KeyProvider>
             <CurrencyProvider>
-              <AppLayout />
+              <ErrorBoundary><AppLayout /></ErrorBoundary>
             </CurrencyProvider>
           </KeyProvider>
         

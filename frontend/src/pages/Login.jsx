@@ -30,6 +30,7 @@ export function Login() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmEmailNotice, setConfirmEmailNotice] = useState('');
 
   // Google Direct Fallback Modal state
   const [showGoogleModal, setShowGoogleModal] = useState(false);
@@ -48,7 +49,12 @@ export function Login() {
 
     try {
       if (isRegister) {
-        await signUpWithEmail(email, password, username);
+        const res = await signUpWithEmail(email, password, username);
+        if (res && res.needsConfirmation) {
+          setConfirmEmailNotice(res.email);
+          setLoading(false);
+          return;
+        }
       } else {
         await signInWithEmail(email, password);
       }
@@ -160,6 +166,31 @@ export function Login() {
             </div>
           )}
 
+          {confirmEmailNotice ? (
+            <div className="text-center py-6 space-y-4 animate-fade-in">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <Mail className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-bold text-white font-display">Check your inbox</h3>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-xs mx-auto font-sans">
+                We sent a confirmation link to <strong className="text-emerald-400 font-mono">{confirmEmailNotice}</strong>.<br />
+                Please open your email and click the confirmation link to finish setting up your account.
+              </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmEmailNotice("");
+                    setIsRegister(false);
+                  }}
+                  className="px-5 py-2.5 rounded-xl apple-glass-pill text-xs font-semibold text-slate-200 hover:text-white transition"
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Social / Instant Access Options */}
           <div className="space-y-2.5 mb-5">
             <button
@@ -291,6 +322,8 @@ export function Login() {
               </span>
             </button>
           </div>
+            </>
+          )}
         </Reveal>
       </div>
 
