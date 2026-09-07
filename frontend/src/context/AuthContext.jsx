@@ -114,6 +114,9 @@ export function AuthProvider({ children }) {
 
   const signInWithGoogleDirect = async (googleProfile) => {
     const res = await api.googleLogin(googleProfile);
+    if (res && res.token) {
+      setStoredAuthToken(res.token);
+    }
     setUser(res);
     return res;
   };

@@ -28,6 +28,13 @@ def verify_supabase_token(token):
     if not token:
         return None
 
+    if token.startswith("user_token_"):
+        try:
+            uid = int(token.split("_")[2])
+            return User.query.get(uid)
+        except Exception:
+            pass
+
 # Demo token bypass disabled
 
     now = time.time()

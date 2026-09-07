@@ -129,12 +129,14 @@ def google_auth():
         db.session.commit()
 
     login_user(user, remember=True)
+    token = f"user_token_{user.id}_{secrets.token_hex(16)}"
     return success_response(
         data={
             "id": user.id,
             "username": user.username,
             "email": user.email,
             "avatar_url": user.avatar_url,
+            "token": token,
             "is_google": True,
             "has_password": False
         },
