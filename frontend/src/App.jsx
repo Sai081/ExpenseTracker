@@ -55,7 +55,7 @@ function AppLayout() {
 
       <main className={`relative z-10 ${isPublicPage ? "flex-1 w-full" : "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24"}`}>
         <Routes>
-          <Route path="/" element={user ? <Dashboard key={refreshKey} /> : <Landing />} />
+          <Route path="/" element={<Landing />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/docs" element={<Docs />} />
           <Route path="/login" element={<Login />} />
@@ -180,13 +180,13 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <DemoWorkspaceProvider>
+        
           <KeyProvider>
             <CurrencyProvider>
               <AppLayout />
             </CurrencyProvider>
           </KeyProvider>
-        </DemoWorkspaceProvider>
+        
       </AuthProvider>
     </BrowserRouter>
   );

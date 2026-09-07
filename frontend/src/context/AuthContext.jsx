@@ -12,6 +12,18 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     async function initAuth() {
       try {
+        // 1. Purge any legacy demo tokens immediately so demo page never shows on startup
+        const currentToken = getStoredAuthToken();
+        if (currentToken === "demo_token" || localStorage.getItem("expense_tracker_demo_mode")) {
+          setStoredAuthToken("");
+          localStorage.removeItem("expense_tracker_demo_mode");
+          localStorage.removeItem("supabase_auth_token");
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Only authenticate if there is a real Supabase session
         if (isSupabaseConfigured && supabase) {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.access_token) {
@@ -31,10 +43,21 @@ export function AuthProvider({ children }) {
           }
         }
 
-        const profile = await api.getMe().catch(() => null);
-        setUser(profile);
+        // 3. If there is a valid non-demo token, verify with /api/auth/me
+        if (currentToken && currentToken !== "demo_token") {
+          const profile = await api.getMe().catch(() => null);
+          if (profile && profile.email !== "demo@expensetracker.local") {
+            setUser(profile);
+          } else {
+            setStoredAuthToken("");
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
       } catch (err) {
         console.error('Auth initialization error:', err);
+        setUser(null);
       } finally {
         setLoading(false);
       }

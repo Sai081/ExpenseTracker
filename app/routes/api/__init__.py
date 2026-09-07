@@ -28,12 +28,7 @@ def verify_supabase_token(token):
     if not token:
         return None
 
-    # Support instant 1-click demo token
-    if token == "demo_token" or token.startswith("demo_token"):
-        demo_user = User.query.filter_by(email="demo@expensetracker.local").first()
-        if not demo_user:
-            demo_user = User.query.first()
-        return demo_user
+# Demo token bypass disabled
 
     now = time.time()
     if token in _TOKEN_CACHE:
