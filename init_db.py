@@ -40,7 +40,7 @@ def init_database():
 
         try:
             db.create_all()
-            print("✓ Database tables created successfully.")
+            print("✓ Tables created successfully.")
         except Exception as e:
             print(f"✗ Failed to create tables: {str(e)}")
             sys.exit(1)
@@ -62,7 +62,7 @@ def init_database():
             db.session.commit()
             print(f"✓ Seeded {added_count} default categories.")
         else:
-            print("✓ Default categories already present.")
+            print("✓ Default categories already up to date.")
 
         print("✓ Database initialization complete!")
 
