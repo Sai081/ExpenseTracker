@@ -14,9 +14,11 @@ import {
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useBYOK } from '../context/KeyContext';
+import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
 
 export function Chat() {
   const { hasKey } = useBYOK();
+  const { isDemo, transactions: demoTransactions, budgets: demoBudgets } = useDemoWorkspace();
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -170,7 +172,12 @@ export function Chat() {
 
     try {
       const history = newMessages.slice(1, -1);
-      const res = await api.chat(query, history);
+      const clientContext = {
+        is_demo: isDemo,
+        demo_transactions: isDemo ? demoTransactions : undefined,
+        demo_budgets: isDemo ? demoBudgets : undefined
+      };
+      const res = await api.chat(query, history, clientContext);
       setMessages((prev) => [...prev, { role: 'assistant', content: res.reply || 'No response.' }]);
     } catch (err) {
       console.error(err);

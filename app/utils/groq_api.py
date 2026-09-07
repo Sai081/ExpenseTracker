@@ -10,15 +10,24 @@ from app.models import Transaction, Budget, Category, User
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_WHISPER_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 
-# Modern active Groq chat models
-DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant"
+# Active Groq chat models
+DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
 ACTIVE_CHAT_MODELS = [
-    "llama-3.1-8b-instant",
-    "llama-3.1-70b-versatile",
-    "mixtral-8x7b-32768",
-    "gemma2-9b-it"
+    "qwen/qwen3.8-27b",
+    "groq/compound-mini",
+    "qwen/qwen3.6-27b",
+    "groq/compound",
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b"
 ]
 DEFAULT_WHISPER_MODEL = "whisper-large-v3-turbo"
+
+def clean_llm_reply(content):
+    """Strips any internal thinking blocks from reasoning models before presentation."""
+    if not content:
+        return ""
+    clean = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL).strip()
+    return clean if clean else content.strip()
 
 def get_effective_groq_key(user_supplied_key=None):
     """Resolves Groq key: prefers user-supplied BYOK key, falls back to server .env GROQ_API_KEY."""
@@ -80,6 +89,20 @@ def get_user_financial_summary(user_id, target_month=None):
         extract('year', Transaction.date) == year_int
     ).scalar() or 0
 
+    # Today's expenses
+    today = date.today()
+    today_expense = db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.user_id == user_id,
+        Transaction.type == 'expense',
+        Transaction.date == today
+    ).scalar() or 0
+
+    today_count = db.session.query(func.count(Transaction.id)).filter(
+        Transaction.user_id == user_id,
+        Transaction.type == 'expense',
+        Transaction.date == today
+    ).scalar() or 0
+
     # Budgets for target month
     budgets = Budget.query.filter_by(user_id=user_id, month=month_str).all()
     budget_info = {b.category.name if b.category else 'Uncategorized': float(b.amount) for b in budgets}
@@ -96,8 +119,11 @@ def get_user_financial_summary(user_id, target_month=None):
 
     category_summary = {name: abs(float(amount)) for name, amount in category_spending}
 
-    # Recent transactions
-    recent_txns = Transaction.query.filter_by(user_id=user_id).order_by(Transaction.date.desc()).limit(10).all()
+    # Recent transactions (30 records for full context)
+    recent_txns = Transaction.query.filter_by(user_id=user_id).order_by(
+        Transaction.date.desc(), Transaction.id.desc()
+    ).limit(30).all()
+
     recent_list = []
     for t in recent_txns:
         recent_list.append({
@@ -117,6 +143,8 @@ def get_user_financial_summary(user_id, target_month=None):
         "total_expense": abs(float(total_expense)),
         "monthly_income": float(monthly_income),
         "monthly_expense": abs(float(monthly_expense)),
+        "today_expense": abs(float(today_expense)),
+        "today_count": today_count,
         "net_savings": float(monthly_income) - abs(float(monthly_expense)),
         "category_spending": category_summary,
         "budgets": budget_info,
@@ -283,16 +311,18 @@ Do not include markdown code blocks or explanations, ONLY the raw JSON object.
                     {"role": "user", "content": text}
                 ],
                 "temperature": 0.1,
-                "max_tokens": 300,
-                "response_format": {"type": "json_object"}
+                "max_tokens": 300
             }
 
             try:
                 response = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=15)
                 if response.status_code == 200:
                     res_json = response.json()
-                    content = res_json["choices"][0]["message"]["content"]
-                    return json.loads(content)
+                    content = clean_llm_reply(res_json["choices"][0]["message"]["content"])
+                    # Extract JSON block
+                    json_match = re.search(r'\{.*\}', content, re.DOTALL)
+                    if json_match:
+                        return json.loads(json_match.group(0))
             except Exception:
                 continue
 
@@ -329,7 +359,7 @@ def is_transaction_command(message):
     """Detects if a user message in chat is an action command to record an expense or income."""
     msg = message.lower().strip()
     
-    if any(msg.startswith(q) for q in ['how much', 'what is', 'what did', 'can i afford', 'show me', 'list all', 'tell me', 'where did', 'am i over', 'why']):
+    if any(msg.startswith(q) for q in ['how much', 'what is', 'what did', 'can i afford', 'show me', 'list all', 'tell me', 'where did', 'am i over', 'why', 'compare']):
         return False
     if '?' in msg:
         return False
@@ -343,7 +373,7 @@ def is_transaction_command(message):
 
     has_number = bool(re.search(r'\d+', msg))
     has_spending_word = any(w in msg for w in ['rupees', 'rs', 'inr', 'dollar', 'lunch', 'dinner', 'uber', 'food', 'groceries', 'coffee', 'swiggy', 'blinkit', 'upi'])
-    if has_number and has_spending_word:
+    if has_number and has_spending_word and ('for' in msg or 'via' in msg or 'on' in msg):
         return True
 
     return False
@@ -405,10 +435,11 @@ def execute_chat_transaction(user_id, message, api_key=None):
         }
     }
 
-def financial_chat_reply(user_id, message, conversation_history, api_key=None):
+def financial_chat_reply(user_id, message, conversation_history, api_key=None, client_context=None):
+    """Answers user financial questions using comprehensive real-time context and active Groq models."""
     effective_key = get_effective_groq_key(api_key)
 
-    # 1. Check if user is asking to record an expense/income
+    # 1. Check if user message is an action command to record an expense/income
     if is_transaction_command(message):
         res = execute_chat_transaction(user_id, message, api_key=effective_key)
         if res:
@@ -417,22 +448,87 @@ def financial_chat_reply(user_id, message, conversation_history, api_key=None):
     summary = get_user_financial_summary(user_id)
     today_str = date.today().strftime("%Y-%m-%d")
 
+    # Build detailed budget table
+    now = datetime.now()
+    month_str = f"{now.year:04d}-{now.month:02d}"
+    budgets = Budget.query.filter_by(user_id=user_id, month=month_str).all()
+    budget_lines = []
+    for b in budgets:
+        cat_name = b.category.name if b.category else 'Uncategorized'
+        b_amt = float(b.amount)
+        spent = summary.get('category_spending', {}).get(cat_name, 0.0)
+        rem = b_amt - spent
+        pct = round((spent / b_amt) * 100, 1) if b_amt > 0 else 0.0
+        status = 'Over Budget ⚠️' if spent > b_amt else ('Close to limit ⚡' if pct >= 80 else 'On Track ✨')
+        budget_lines.append(f"- **{cat_name}**: Budget ₹{b_amt:,.2f} | Spent ₹{spent:,.2f} | Remaining ₹{rem:,.2f} ({pct}% used · {status})")
+
+    # Build detailed transaction ledger lines (up to 30 items)
+    txns = summary.get('recent_transactions', [])
+    txn_lines = []
+    for t in txns[:30]:
+        t_type = (t.get('type') or 'expense').capitalize()
+        t_amt = float(t.get('amount') or 0.0)
+        txn_lines.append(
+            f"- {t.get('date', 'N/A')} | {t_type} | ₹{t_amt:,.2f} | {t.get('category', 'Uncategorized')} | {t.get('payment_method', 'UPI').upper()} | {t.get('description', '')}"
+        )
+
+    # Category breakdown lines
+    cat_spending = summary.get('category_spending', {})
+    total_spent_cats = sum(cat_spending.values()) or 1.0
+    cat_lines = []
+    for cat_name, amt in sorted(cat_spending.items(), key=lambda x: x[1], reverse=True):
+        cat_pct = round((amt / total_spent_cats) * 100, 1)
+        cat_lines.append(f"- **{cat_name}**: ₹{amt:,.2f} ({cat_pct}% of total spent)")
+
+    # Client-supplied extra context (e.g. from React demo mode or UI active filters)
+    extra_context_str = ""
+    if client_context and isinstance(client_context, dict):
+        extra_parts = []
+        if client_context.get('selected_month'):
+            extra_parts.append(f"- Viewing Month: {client_context['selected_month']}")
+        if client_context.get('demo_transactions'):
+            demo_txns = client_context['demo_transactions'][:20]
+            extra_parts.append("\nDEMO ACTIVE TRANSACTIONS IN VIEW:\n" + "\n".join([
+                f"- {dt.get('date', 'N/A')} | {dt.get('type', 'expense').capitalize()} | ₹{float(dt.get('amount', 0)):,.2f} | {dt.get('category', '')} | {dt.get('description', '')}"
+                for dt in demo_txns
+            ]))
+        if client_context.get('demo_budgets'):
+            extra_parts.append("\nDEMO ACTIVE BUDGETS IN VIEW:\n" + "\n".join([
+                f"- {db_item.get('category_name', '')}: Cap ₹{float(db_item.get('amount', 0)):,.2f} ({db_item.get('usage_percent', 0)}% used)"
+                for db_item in client_context['demo_budgets']
+            ]))
+        extra_context_str = "\n".join(extra_parts)
+
     system_prompt = f"""
-You are "ExpenseTracker AI", a friendly, highly skilled personal wealth advisor embedded in the user's Expense Tracker.
-Today's date is {today_str}. Always format financial figures using Indian Rupee (₹).
+You are "ExpenseTracker AI", a knowledgeable, precise, and encouraging personal financial advisor embedded directly in the user's Expense Tracker app.
+Today's date is: {today_str}.
+Currency: Indian Rupee (₹).
 
-User's Real-Time Financial Profile for {summary.get('month_name', 'current month')}:
-- Monthly Income: ₹{summary['monthly_income']:.2f}
-- Monthly Expenses: ₹{summary['monthly_expense']:.2f}
-- Net Savings: ₹{summary['net_savings']:.2f}
-- Category Budgets: {json.dumps(summary['budgets'])}
-- Spending by Category this Month: {json.dumps(summary['category_spending'])}
-- Recent Transactions: {json.dumps(summary['recent_transactions'][:5])}
+=== REAL-TIME USER FINANCIAL DATA ===
+• Monthly Timeline: {summary.get('month_name', 'Current Month')}
+• Total Income This Month: ₹{summary['monthly_income']:,.2f}
+• Total Expenses This Month: ₹{summary['monthly_expense']:,.2f}
+• Net Retained Savings: ₹{summary['net_savings']:,.2f}
+• Today's Outflow: ₹{summary.get('today_expense', 0.0):,.2f} across {summary.get('today_count', 0)} transaction(s)
 
-Instructions:
-1. Answer the user's financial questions with reference to their actual numbers above.
-2. Be encouraging, concise, actionable, and formatted with clean Markdown bullet points.
-3. If they ask about affordability or budgets, provide exact remaining amounts.
+=== CATEGORY SPENDING THIS MONTH ===
+{chr(10).join(cat_lines) if cat_lines else '- No category expenses recorded yet.'}
+
+=== ACTIVE BUDGET LIMITS & USAGE ===
+{chr(10).join(budget_lines) if budget_lines else '- No category budget caps defined for this month.'}
+
+=== RECENT TRANSACTION LEDGER (Latest {len(txn_lines)} entries) ===
+{chr(10).join(txn_lines) if txn_lines else '- No recorded transactions in ledger.'}
+
+{extra_context_str}
+
+=== INSTRUCTIONS & CAPABILITIES ===
+1. You have FULL ACCESS to the user's real financial data provided above. Base all responses on these exact numbers, dates, categories, and transactions.
+2. If the user asks questions like "How much did I spend on food?", calculate from the Food & Dining category total and individual transactions above.
+3. If the user asks "Can I afford X?" (e.g. dinner, shopping, gadgets), check their remaining category budget limit and net savings, and calculate the exact balance remaining after the proposed purchase.
+4. If the user asks about recent activity or largest outflows, cite the specific transactions from the ledger above with dates, categories, and amounts.
+5. Keep your tone direct, friendly, and empowering. Format answers with clean markdown bullet points, bold highlights, and ₹ values.
+6. Do NOT output internal reasoning tokens (like <think>). Provide only the final helpful answer.
 """.strip()
 
     if effective_key:
@@ -441,6 +537,8 @@ Instructions:
             c = (msg.get("content") or "").strip()
             r = msg.get("role")
             if c and r in ["user", "assistant"]:
+                # Clean any previous thinking tags from history
+                c = clean_llm_reply(c)
                 messages.append({"role": r, "content": c})
         messages.append({"role": "user", "content": message.strip()})
 
@@ -461,16 +559,29 @@ Instructions:
                 response = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=20)
                 if response.status_code == 200:
                     res_json = response.json()
-                    return {"reply": res_json["choices"][0]["message"]["content"].strip()}
+                    raw_content = res_json["choices"][0]["message"]["content"]
+                    clean_content = clean_llm_reply(raw_content)
+                    if clean_content:
+                        return {"reply": clean_content}
             except Exception:
                 continue
 
-    # Friendly contextual fallback using real database numbers
+    # Friendly data-grounded contextual response based on real numbers
     m_inc = summary.get('monthly_income', 0.0)
     m_exp = summary.get('monthly_expense', 0.0)
     m_sav = m_inc - m_exp
+    top_cats = sorted(cat_spending.items(), key=lambda x: x[1], reverse=True)[:3]
+    top_cats_text = ", ".join([f"{k} (₹{v:,.2f})" for k, v in top_cats]) if top_cats else "None"
+    
     return {
-        "reply": f"👋 **ExpenseTracker AI Summary**:\n\n- **Income this month**: ₹{m_inc:,.2f}\n- **Expenses this month**: ₹{m_exp:,.2f}\n- **Net Savings**: ₹{m_sav:,.2f}\n\n*Tip: Ask me about your budgets or speak 'Spent 350 for lunch via UPI' to log an expense!*"
+        "reply": (
+            f"📊 **Financial Snapshot for {summary.get('month_name', 'This Month')}**:\n\n"
+            f"- **Income**: ₹{m_inc:,.2f}\n"
+            f"- **Expenses**: ₹{m_exp:,.2f}\n"
+            f"- **Net Retained Savings**: ₹{m_sav:,.2f}\n"
+            f"- **Top Spending Categories**: {top_cats_text}\n\n"
+            f"You have {len(summary.get('recent_transactions', []))} transactions on record. Ask me about any category, budget limit, or specific transaction!"
+        )
     }
 
 def get_financial_insights(user_id, api_key=None, target_month=None):
@@ -592,12 +703,14 @@ Keep tone professional, encouraging, and formatted with clean bullet points. For
             try:
                 res = requests.post(GROQ_API_URL, headers=headers, json=payload, timeout=20)
                 if res.status_code == 200:
-                    ai_narrative = res.json()["choices"][0]["message"]["content"].strip()
-                    break
+                    raw_text = res.json()["choices"][0]["message"]["content"]
+                    ai_narrative = clean_llm_reply(raw_text)
+                    if ai_narrative:
+                        break
             except Exception:
                 continue
 
-    # Fallback personalized narrative based on real numbers (so user NEVER sees a lock error)
+    # Fallback personalized narrative based on real numbers
     if not ai_narrative:
         month_display = summary.get('month_name', 'This Month')
         top_cat_name = sorted(cat_spending.items(), key=lambda x: x[1], reverse=True)[0][0] if cat_spending else 'General Expenses'
@@ -612,7 +725,7 @@ Your net monthly cash flow is positive and healthy for this period.
 ### 2. Budget Health & Risk Observations
 {'- All active category budgets performed within target spending boundaries.' if over_budget_count == 0 else f'- ⚠️ Over budget on {over_budget_count} categories. Review discretionary transactions.'}
 - Primary spending focus: **{top_cat_name}** (₹{top_cat_val:,.2f}).
-- Overall Financial Health Score: **{score}/100 ({score_rating})**.
+- Overall Financial Health Score: **{score}/100 ({score_rating})** .
 
 ### 3. High-Impact Action Items
 - Continue logging daily transactions with the **Voice Quick Entry** tool to maintain ledger velocity.

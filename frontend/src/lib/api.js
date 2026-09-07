@@ -212,8 +212,8 @@ export const api = {
     }
     return json.data?.text || '';
   },
-  chat: (message, history = []) => request('/ai/chat', {
+  chat: (message, history = [], context = null) => request('/ai/chat', {
     method: 'POST',
-    body: JSON.stringify({ message, history })
+    body: JSON.stringify({ message, history, context })
   })
 };

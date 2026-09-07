@@ -45,9 +45,6 @@ def get_yearly_insights():
 @api_login_required
 def generate_insights():
     api_key = get_request_api_key()
-    if not api_key:
-        return error_response("Groq API key is required to generate AI insights. Please connect your personal key.", status_code=403, errors={"key_required": True})
-
     data = request.get_json() or {}
     target_month = data.get('month')
     try:
@@ -63,9 +60,6 @@ def generate_insights():
 @api_login_required
 def voice_parse():
     api_key = get_request_api_key()
-    if not api_key:
-        return error_response("Groq API key is required for Voice Parsing. Please connect your personal key.", status_code=403, errors={"key_required": True})
-
     data = request.get_json() or {}
     transcript = (data.get('text') or '').strip()
     if not transcript:
@@ -134,22 +128,16 @@ def transcribe_audio():
 @api_login_required
 def chat():
     api_key = get_request_api_key()
-    if not api_key:
-        return error_response(
-            "Groq API Key is required to chat with ExpenseTracker AI. Please connect your personal key.",
-            status_code=403,
-            errors={"key_required": True}
-        )
-
     data = request.get_json() or {}
     message = (data.get('message') or '').strip()
     history = data.get('history') or []
+    client_context = data.get('context')
 
     if not message:
         return error_response("Message cannot be empty", status_code=400)
 
     try:
-        res = financial_chat_reply(current_user.id, message, history, api_key=api_key)
+        res = financial_chat_reply(current_user.id, message, history, api_key=api_key, client_context=client_context)
         return success_response(data=res)
     except Exception as e:
         return error_response(f"Chat error: {str(e)}", status_code=500)
