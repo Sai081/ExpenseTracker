@@ -102,7 +102,7 @@
   box-shadow: 0 20px 40px -15px rgba(0,0,0,.7), inset 0 1px rgba(255,255,255,.04);
 }
 .auth-page .glass-input { background: rgba(255,255,255,.035); border-color: rgba(255,255,255,.08); }
-.auth-page .glass-input:focus-within { border-color: rgba(129,140,248,.55); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+.auth-page .glass-input:focus-within { border-color: rgba(45,212,191,.55); box-shadow: 0 0 0 3px rgba(45,212,191,.12); }
 
 /* Authenticated workspace: keep color for meaning, remove it from decoration. */
 .finance-workspace .text-violet-300,
