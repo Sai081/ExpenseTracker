@@ -20,7 +20,7 @@ import { Reveal } from '../hooks/useReveal';
 import { BrandLogo } from '../components/Navbar';
 
 export function Login() {
-  const { user, signInWithGoogle, signInWithGoogleDirect, signInWithEmail, signUpWithEmail, signInDemo } = useAuth();
+  const { user, signInWithGoogle, signInWithGoogleDirect, signInWithEmail, signUpWithEmail } = useAuth();
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
@@ -28,7 +28,6 @@ export function Login() {
   const [username, setUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -94,18 +93,6 @@ export function Login() {
     }
   };
 
-  const handleDemoAuth = async () => {
-    setError('');
-    setDemoLoading(true);
-    try {
-      await signInDemo();
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.message || 'Demo access failed');
-    } finally {
-      setDemoLoading(false);
-    }
-  };
 
   return (
     <div className="auth-page min-h-screen bg-[#071312] text-slate-100 flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-8 relative selection:bg-cyan-500/30 selection:text-cyan-100 font-sans">
@@ -193,18 +180,7 @@ export function Login() {
               <span>Continue with Google</span>
             </button>
 
-            <button
-              onClick={handleDemoAuth}
-              disabled={demoLoading || loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/25 hover:border-emerald-400/40 text-emerald-300 font-semibold text-xs sm:text-sm transition-all duration-200 active:scale-[0.99] disabled:opacity-50"
-            >
-              {demoLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-              ) : (
-                <Sparkles className="w-4 h-4 text-emerald-400" />
-              )}
-              <span>Explore Instant Demo Workspace</span>
-            </button>
+
           </div>
 
           <div className="relative flex py-2 items-center mb-4">

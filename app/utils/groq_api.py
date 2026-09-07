@@ -22,6 +22,49 @@ ACTIVE_CHAT_MODELS = [
 ]
 DEFAULT_WHISPER_MODEL = "whisper-large-v3-turbo"
 
+EXCHANGE_RATES_TO_USD = {
+    'USD': 1.0,
+    'INR': 87.5,
+    'EUR': 0.92,
+    'GBP': 0.78,
+    'JPY': 152.0,
+    'CAD': 1.38,
+    'AUD': 1.52,
+    'AED': 3.67
+}
+
+CURRENCY_SYMBOLS = {
+    'USD': '$',
+    'INR': '₹',
+    'EUR': '€',
+    'GBP': '£',
+    'JPY': '¥',
+    'CAD': 'C$',
+    'AUD': 'A$',
+    'AED': 'AED'
+}
+
+CURRENCY_ALIASES = {
+    'rupee': 'INR', 'rupees': 'INR', 'rs': 'INR', 'inr': 'INR', '₹': 'INR',
+    'dollar': 'USD', 'dollars': 'USD', 'usd': 'USD', '$': 'USD', 'bucks': 'USD',
+    'euro': 'EUR', 'euros': 'EUR', 'eur': 'EUR', '€': 'EUR',
+    'pound': 'GBP', 'pounds': 'GBP', 'gbp': 'GBP', '£': 'GBP',
+    'yen': 'JPY', 'jpy': 'JPY', '¥': 'JPY',
+    'dirham': 'AED', 'dirhams': 'AED', 'aed': 'AED',
+    'cad': 'CAD', 'aud': 'AUD'
+}
+
+def convert_currency(amount, from_code, to_code):
+    from_code = (from_code or 'USD').upper()
+    to_code = (to_code or 'USD').upper()
+    if from_code == to_code:
+        return float(amount)
+    rate_from = EXCHANGE_RATES_TO_USD.get(from_code, 1.0)
+    rate_to = EXCHANGE_RATES_TO_USD.get(to_code, 1.0)
+    amount_in_usd = float(amount) / rate_from
+    converted = amount_in_usd * rate_to
+    return round(converted, 2)
+
 def clean_llm_reply(content):
     """Strips any internal thinking blocks from reasoning models before presentation."""
     if not content:
@@ -203,20 +246,44 @@ def get_yearly_financial_trend(user_id, num_months=12):
 
     return trend
 
-def local_parse_transaction(text, categories):
+def local_parse_transaction(text, categories, target_currency='INR'):
     """Fallback NLP heuristics when Groq API is unavailable."""
     today_str = date.today().strftime("%Y-%m-%d")
     text_lower = text.lower()
+    target_code = (target_currency or 'INR').upper()
+    target_symbol = CURRENCY_SYMBOLS.get(target_code, target_code)
 
-    # 1. Amount extraction
+    # 1. Amount & Currency extraction
     amount = 0.0
-    amount_match = re.search(r'(?:₹|\$|€|£|rs\.?|inr|rupees?|dollars?|euros?)?\s*(\d+(?:,\d+)*(?:\.\d{1,2})?)\s*(?:₹|\$|€|£|rs\.?|inr|rupees?|dollars?|euros?)?', text_lower)
-    if amount_match:
-        raw_val = amount_match.group(1).replace(',', '')
-        try:
-            amount = float(raw_val)
-        except ValueError:
-            amount = 100.0
+    detected_currency = None
+
+    for alias, code_alias in CURRENCY_ALIASES.items():
+        pattern = rf'(?:{re.escape(alias)}\s*(\d+(?:,\d+)*(?:\.\d{{1,2}})?)|(\d+(?:,\d+)*(?:\.\d{{1,2}})?)\s*{re.escape(alias)})'
+        m = re.search(pattern, text_lower)
+        if m:
+            raw_num = m.group(1) or m.group(2)
+            if raw_num:
+                detected_currency = code_alias
+                try:
+                    amount = float(raw_num.replace(',', ''))
+                except ValueError:
+                    amount = 100.0
+                break
+
+    if amount <= 0:
+        amount_match = re.search(r'(\d+(?:,\d+)*(?:\.\d{1,2})?)', text_lower)
+        if amount_match:
+            try:
+                amount = float(amount_match.group(1).replace(',', ''))
+            except ValueError:
+                amount = 100.0
+
+    note_suffix = ""
+    if detected_currency and detected_currency != target_code:
+        orig_amount = amount
+        amount = convert_currency(amount, detected_currency, target_code)
+        orig_sym = CURRENCY_SYMBOLS.get(detected_currency, detected_currency)
+        note_suffix = f" (converted from {orig_sym}{orig_amount:,.2f} {detected_currency})"
 
     # 2. Type extraction
     is_income = any(w in text_lower for w in ['salary', 'received', 'credited', 'earned', 'deposit', 'dividend', 'bonus', 'refund', 'freelance'])
@@ -264,6 +331,8 @@ def local_parse_transaction(text, categories):
     clean_desc = text.strip()
     if len(clean_desc) > 80:
         clean_desc = clean_desc[:77] + "..."
+    if note_suffix:
+        clean_desc += note_suffix
 
     return {
         "amount": amount,
@@ -274,18 +343,28 @@ def local_parse_transaction(text, categories):
         "date": today_str
     }
 
-def parse_voice_transaction(text, categories, api_key=None):
+def parse_voice_transaction(text, categories, api_key=None, target_currency='INR'):
     effective_key = get_effective_groq_key(api_key)
     cat_names = [c["name"] for c in categories]
     today_str = date.today().strftime("%Y-%m-%d")
+    target_code = (target_currency or 'INR').upper()
+    target_sym = CURRENCY_SYMBOLS.get(target_code, target_code)
 
     if effective_key:
         system_prompt = f"""
 You are an expert natural language financial transaction parser for ExpenseTracker AI.
 Today's date is: {today_str}.
+The user's active display currency is: {target_code} ({target_sym}).
 Available user categories are: {json.dumps(cat_names)}.
 
 Analyze the spoken transcript from the user and extract structured transaction details.
+CURRENCY CONVERSION RULE:
+- If the user mentions a specific foreign currency (e.g. "50 dollars", "30 euros", "1000 rupees", "20 pounds"):
+  1. Convert the amount to the user's active currency ({target_code}) using standard exchange rates (1 USD = 87.5 INR, 1 EUR = 0.92 USD, 1 GBP = 1.28 USD, 1 JPY = 0.0066 USD, 1 CAD = 0.72 USD, 1 AUD = 0.66 USD, 1 AED = 0.27 USD).
+  2. Return the converted amount in "amount".
+  3. Append "(converted from <amount> <currency>)" to "description".
+- If the user specifies no currency or says the same currency as {target_code}, do NOT convert; enter the exact amount as given.
+
 You MUST output ONLY valid, strictly parseable JSON with the following schema:
 {{
   "amount": <number>,
@@ -327,7 +406,7 @@ Do not include markdown code blocks or explanations, ONLY the raw JSON object.
                 continue
 
     # Graceful fallback to local parser
-    return local_parse_transaction(text, categories)
+    return local_parse_transaction(text, categories, target_currency=target_code)
 
 def transcribe_audio_file(audio_bytes, filename="audio.webm", api_key=None):
     """Transcribes audio data using Groq's Whisper API endpoint."""
@@ -378,14 +457,14 @@ def is_transaction_command(message):
 
     return False
 
-def execute_chat_transaction(user_id, message, api_key=None):
+def execute_chat_transaction(user_id, message, api_key=None, target_currency="INR"):
     """Extracts and creates a transaction directly from chat message."""
     categories = Category.query.filter(
         (Category.user_id == user_id) | (Category.user_id.is_(None))
     ).all()
     cat_list = [{"id": c.id, "name": c.name} for c in categories]
 
-    parsed = parse_voice_transaction(message, cat_list, api_key=api_key)
+    parsed = parse_voice_transaction(message, cat_list, api_key=api_key, target_currency=target_currency)
     amount = float(parsed.get('amount', 0.0))
     if amount <= 0:
         return None
@@ -423,8 +502,9 @@ def execute_chat_transaction(user_id, message, api_key=None):
     method = parsed.get('payment_method', 'upi').upper()
     action_type = "Expense" if new_txn.type == 'expense' else "Income"
 
+    cur_sym = CURRENCY_SYMBOLS.get((target_currency or "INR").upper(), "$")
     return {
-        "reply": f"✅ **{action_type} Recorded Successfully!**\n\n- **Amount**: ₹{amount:,.2f}\n- **Category**: {cat_name}\n- **Method**: {method}\n- **Date**: {txn_date.strftime('%Y-%m-%d')}\n- **Description**: {new_txn.description}\n\nYour dashboard and transaction ledger have been updated.",
+        "reply": f"✅ **{action_type} Recorded Successfully!**\n\n- **Amount**: {cur_sym}{amount:,.2f} ({target_currency})\n- **Category**: {cat_name}\n- **Method**: {method}\n- **Date**: {txn_date.strftime('%Y-%m-%d')}\n- **Description**: {new_txn.description}\n\nYour dashboard and transaction ledger have been updated.",
         "transaction_created": True,
         "transaction": {
             "id": new_txn.id,
@@ -435,13 +515,15 @@ def execute_chat_transaction(user_id, message, api_key=None):
         }
     }
 
-def financial_chat_reply(user_id, message, conversation_history, api_key=None, client_context=None):
+def financial_chat_reply(user_id, message, conversation_history, api_key=None, client_context=None, currency_code="INR", currency_symbol="₹"):
     """Answers user financial questions using comprehensive real-time context and active Groq models."""
     effective_key = get_effective_groq_key(api_key)
 
     # 1. Check if user message is an action command to record an expense/income
+    curr_c = (currency_code or 'INR').upper()
+    curr_s = currency_symbol or CURRENCY_SYMBOLS.get(curr_c, '₹')
     if is_transaction_command(message):
-        res = execute_chat_transaction(user_id, message, api_key=effective_key)
+        res = execute_chat_transaction(user_id, message, api_key=effective_key, target_currency=curr_c)
         if res:
             return res
 
@@ -502,7 +584,7 @@ def financial_chat_reply(user_id, message, conversation_history, api_key=None, c
     system_prompt = f"""
 You are "ExpenseTracker AI", a knowledgeable, precise, and encouraging personal financial advisor embedded directly in the user's Expense Tracker app.
 Today's date is: {today_str}.
-Currency: Indian Rupee (₹).
+Currency: {curr_c} ({curr_s}).
 
 === REAL-TIME USER FINANCIAL DATA ===
 • Monthly Timeline: {summary.get('month_name', 'Current Month')}
@@ -584,7 +666,7 @@ Currency: Indian Rupee (₹).
         )
     }
 
-def get_financial_insights(user_id, api_key=None, target_month=None):
+def get_financial_insights(user_id, api_key=None, target_month=None, currency_code="INR", currency_symbol="₹"):
     """Generates structured financial insights with health score, breakdown, yearly trends, and AI recommendations."""
     summary = get_user_financial_summary(user_id, target_month=target_month)
     monthly_inc = summary.get('monthly_income', 0.0)
@@ -670,19 +752,25 @@ def get_financial_insights(user_id, api_key=None, target_month=None):
     ai_narrative = ""
     effective_key = get_effective_groq_key(api_key)
     if effective_key:
+        curr_c = (currency_code or 'INR').upper()
+        curr_s = currency_symbol or CURRENCY_SYMBOLS.get(curr_c, '₹')
         prompt = f"""
 You are a senior personal wealth advisor analyzing this user's finances for {summary.get('month_name', 'the month')}:
-- Total Income: ₹{monthly_inc:,.2f}
-- Total Expenses: ₹{monthly_exp:,.2f}
-- Net Savings: ₹{net_savings:,.2f} ({savings_rate:.1f}%)
+- Selected Display Currency: {curr_c} ({curr_s})
+- Total Income: {curr_s}{monthly_inc:,.2f} {curr_c}
+- Total Expenses: {curr_s}{monthly_exp:,.2f} {curr_c}
+- Net Savings: {curr_s}{net_savings:,.2f} ({savings_rate:.1f}%)
 - Category Spending: {json.dumps(cat_spending)}
 - Category Budgets: {json.dumps(budgets)}
 
-Provide a sharp, encouraging, and deeply practical financial analysis in 3 clear markdown sections:
-### 1. Financial Snapshot & Cash Flow
-### 2. Budget Health & Risk Observations
-### 3. High-Impact Action Items for This Month
-Keep tone professional, encouraging, and formatted with clean bullet points. Format with Indian Rupee (₹).
+Provide a sharp, encouraging, and deeply practical financial analysis in 3 clear sections:
+1. Financial Snapshot & Cash Flow
+2. Budget Health & Risk Observations
+3. High-Impact Action Items for This Month
+Keep tone professional, encouraging, and formatted with clean bullet points.
+CRITICAL FORMATTING INSTRUCTIONS:
+- Format ALL financial figures using {curr_s} ({curr_c}).
+- Do NOT use asterisk markdown symbols (like ** or *). Present clear labels and clean bullet points without raw asterisks.
 """.strip()
 
         headers = {

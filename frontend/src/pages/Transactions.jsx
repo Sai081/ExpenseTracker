@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function Transactions() {
+  const { currency } = useCurrency();
   const { isDemo, transactions: demoTransactions, removeTransaction, updateTransaction } = useDemoWorkspace();
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -216,21 +218,21 @@ export function Transactions() {
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <a
-            href="/api/report/export_csv"
+            href={`/api/report/export_csv?currency=${currency.code}&currency_symbol=${encodeURIComponent(currency.symbol)}`}
             download
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono font-semibold rounded-xl apple-glass-pill border border-white/10 text-slate-300 hover:text-white hover:border-cyan-500/40 transition shadow-sm magnetic-btn"
           >
             <Download className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Export CSV</span>
+            <span>Export CSV ({currency.code})</span>
           </a>
           <a
-            href="/api/report/export_pdf"
+            href={`/api/report/export_pdf?currency=${currency.code}&currency_symbol=${encodeURIComponent(currency.symbol)}`}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono font-semibold rounded-xl apple-glass-pill border border-white/10 text-slate-300 hover:text-white hover:border-violet-500/40 transition shadow-sm magnetic-btn"
           >
             <Download className="w-3.5 h-3.5 text-violet-400" />
-            <span>Export PDF</span>
+            <span>Export PDF ({currency.code})</span>
           </a>
         </div>
       </div>
@@ -335,7 +337,7 @@ export function Transactions() {
                         isExpense ? 'text-rose-400' : 'text-emerald-400'
                       }`}
                     >
-                      {isExpense ? '-' : '+'}₹{txn.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {isExpense ? '-' : '+'}{currency.symbol}{txn.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </p>
 
                     {/* Edit Option Beside Delete Option */}
@@ -449,9 +451,9 @@ export function Transactions() {
 
               {/* Amount */}
               <div>
-                <label className="block text-xs font-mono uppercase text-slate-400 mb-1.5">Quantum (₹)</label>
+                <label className="block text-xs font-mono uppercase text-slate-400 mb-1.5">Amount ({currency.symbol})</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-mono font-bold text-xs">₹</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-mono font-bold text-xs">{currency.symbol}</span>
                   <input
                     type="number"
                     step="any"

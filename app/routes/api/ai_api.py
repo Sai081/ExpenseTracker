@@ -26,8 +26,10 @@ def get_request_api_key():
 def get_insights():
     api_key = get_request_api_key()
     target_month = request.args.get('month')  # e.g. '2026-08' or None
+    curr_code = request.headers.get("X-Currency") or request.args.get('currency') or 'INR'
+    curr_sym = request.headers.get("X-Currency-Symbol") or request.args.get('currency_symbol') or '₹'
     try:
-        insights_data = get_financial_insights(current_user.id, api_key=api_key, target_month=target_month)
+        insights_data = get_financial_insights(current_user.id, api_key=api_key, target_month=target_month, currency_code=curr_code, currency_symbol=curr_sym)
         return success_response(data=insights_data)
     except Exception as e:
         return error_response(f"Error fetching insights: {str(e)}", status_code=500)
@@ -47,8 +49,10 @@ def generate_insights():
     api_key = get_request_api_key()
     data = request.get_json() or {}
     target_month = data.get('month')
+    curr_code = request.headers.get("X-Currency") or data.get('currency') or 'INR'
+    curr_sym = request.headers.get("X-Currency-Symbol") or data.get('currency_symbol') or '₹'
     try:
-        insights_data = get_financial_insights(current_user.id, api_key=api_key, target_month=target_month)
+        insights_data = get_financial_insights(current_user.id, api_key=api_key, target_month=target_month, currency_code=curr_code, currency_symbol=curr_sym)
         return success_response(
             data={"insights": insights_data},
             message="Insights generated successfully"
@@ -69,9 +73,10 @@ def voice_parse():
         or_(Category.user_id == current_user.id, Category.user_id.is_(None))
     ).all()
     cat_list = [{"id": c.id, "name": c.name} for c in categories]
+    curr_code = request.headers.get("X-Currency") or data.get('currency') or 'INR'
 
     try:
-        parsed_txn = parse_voice_transaction(transcript, cat_list, api_key=api_key)
+        parsed_txn = parse_voice_transaction(transcript, cat_list, api_key=api_key, target_currency=curr_code)
 
         matched_cat_id = None
         parsed_cat_name = (parsed_txn.get("category") or "").strip().lower()
@@ -132,12 +137,14 @@ def chat():
     message = (data.get('message') or '').strip()
     history = data.get('history') or []
     client_context = data.get('context')
+    curr_code = request.headers.get("X-Currency") or data.get('currency') or 'INR'
+    curr_sym = request.headers.get("X-Currency-Symbol") or data.get('currency_symbol') or '₹'
 
     if not message:
         return error_response("Message cannot be empty", status_code=400)
 
     try:
-        res = financial_chat_reply(current_user.id, message, history, api_key=api_key, client_context=client_context)
+        res = financial_chat_reply(current_user.id, message, history, api_key=api_key, client_context=client_context, currency_code=curr_code, currency_symbol=curr_sym)
         return success_response(data=res)
     except Exception as e:
         return error_response(f"Chat error: {str(e)}", status_code=500)

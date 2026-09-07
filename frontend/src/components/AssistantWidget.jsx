@@ -13,6 +13,7 @@ import {
 import { api } from '../lib/api';
 import { useBYOK } from '../context/KeyContext';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
+import { CleanMarkdown } from './CleanMarkdown';
 import { BrandLogo } from './Navbar';
 
 export function AssistantWidget({ onTransactionCreated }) {
@@ -376,13 +377,13 @@ export function AssistantWidget({ onTransactionCreated }) {
                   </div>
 
                   <div
-                    className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed whitespace-pre-wrap ${
+                    className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl leading-relaxed ${
                       isUser
                         ? 'bg-emerald-600 text-white rounded-tr-none shadow-md font-sans'
                         : 'bg-white/[0.035] border border-white/[0.08] text-slate-200 rounded-tl-none shadow-md'
                     }`}
                   >
-                    {msg.content}
+                    {isUser ? msg.content : <CleanMarkdown content={msg.content} />}
                   </div>
                 </div>
               );

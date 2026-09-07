@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Loader2, PlusCircle } from 'lucide-react';
 import { api } from '../lib/api';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function AddTransactionModal({ isOpen, onClose, onTransactionCreated }) {
+  const { currency } = useCurrency();
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -118,9 +120,9 @@ export function AddTransactionModal({ isOpen, onClose, onTransactionCreated }) {
 
           {/* Amount */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">Amount (₹)</label>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">Amount ({currency.symbol})</label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">{currency.symbol}</span>
               <input
                 type="number"
                 step="any"

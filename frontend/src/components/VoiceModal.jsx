@@ -12,6 +12,7 @@ import {
   Zap
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { useCurrency, CURRENCY_ALIASES } from '../context/CurrencyContext';
 
 const DEFAULT_CATEGORIES = [
   "Food & Dining",
@@ -29,6 +30,7 @@ const DEFAULT_CATEGORIES = [
 ];
 
 export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
+  const { currency, convertAmount } = useCurrency();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [parsing, setParsing] = useState(false);
@@ -64,6 +66,11 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
         setCategoriesList(cats.map(c => c.name));
       }
     }).catch(() => {});
+
+    if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      setError('Web Speech API requires a secure HTTPS connection. Please ensure SSL is active.');
+      return;
+    }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -120,6 +127,9 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
 
   const startMediaRecorderFallback = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Microphone access is unavailable. Modern browsers require an HTTPS connection for audio recording.');
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
       const recorder = new MediaRecorder(stream);
@@ -190,7 +200,43 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
     setParsing(true);
     setError('');
     try {
-      const data = await api.parseVoice(query);
+      let data;
+      try {
+        data = await api.parseVoice(query);
+      } catch (err) {
+        // Client fallback currency detection & conversion
+        const textLower = query.toLowerCase();
+        let detectedCurr = null;
+        let amt = 0;
+        for (const [alias, code] of Object.entries(CURRENCY_ALIASES)) {
+          const match = textLower.match(new RegExp(`(?:${alias}\\s*(\\d+(?:,\\d+)*(?:\\.\\d{1,2})?)|(\\d+(?:,\\d+)*(?:\\.\\d{1,2})?)\\s*${alias})`));
+          if (match) {
+            const numStr = match[1] || match[2];
+            amt = parseFloat(numStr.replace(/,/g, ''));
+            detectedCurr = code;
+            break;
+          }
+        }
+        if (!amt) {
+          const numMatch = textLower.match(/(\d+(?:,\d+)*(?:\.\d{1,2})?)/);
+          if (numMatch) amt = parseFloat(numMatch[1].replace(/,/g, ''));
+        }
+        let note = query;
+        if (detectedCurr && detectedCurr !== currency.code) {
+          const converted = convertAmount(amt, detectedCurr, currency.code);
+          note += ` (converted from ${amt} ${detectedCurr})`;
+          amt = converted;
+        }
+        data = {
+          amount: amt || 100,
+          type: textLower.includes('salary') || textLower.includes('earned') ? 'income' : 'expense',
+          category: 'Food & Dining',
+          description: note,
+          payment_method: 'upi',
+          date: new Date().toISOString().split('T')[0]
+        };
+      }
+
       setParsedData({
         amount: data.amount || '',
         type: data.type || 'expense',
@@ -382,9 +428,9 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
 
             {/* Amount Input */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-slate-400 w-24">Quantum (₹):</span>
+              <span className="text-xs font-mono text-slate-400 w-24">Amount ({currency.symbol}):</span>
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono font-bold">₹</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono font-bold">{currency.symbol}</span>
                 <input
                   type="number"
                   step="any"

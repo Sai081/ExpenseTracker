@@ -59,6 +59,16 @@ export function setBYOKPromptDismissed(userId = _activeUserId) {
   localStorage.setItem(`byok_dismissed_${userId}`, 'true');
 }
 
+export function getStoredCurrency() {
+  return localStorage.getItem('expense_tracker_currency') || 'INR';
+}
+
+export function getStoredCurrencySymbol() {
+  const code = getStoredCurrency();
+  const map = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥', CAD: 'C$', AUD: 'A$', AED: 'AED' };
+  return map[code] || '₹';
+}
+
 export function getStoredAuthToken() {
   return localStorage.getItem('supabase_auth_token') || '';
 }
@@ -87,6 +97,9 @@ async function request(endpoint, options = {}) {
   if (groqKey) {
     headers['X-Groq-Api-Key'] = groqKey;
   }
+
+  const currCode = getStoredCurrency();
+  if (currCode) headers['X-Currency'] = currCode;
 
   const config = {
     ...options,
@@ -133,6 +146,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(data)
   }),
+  deleteAccount: () => request('/auth/account', { method: 'DELETE' }),
 
   // Dashboard
   getDashboardSummary: (month) => request(`/dashboard/summary${month ? `?month=${encodeURIComponent(month)}` : ''}`),

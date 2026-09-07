@@ -25,11 +25,14 @@ import { api } from '../lib/api';
 import { useBYOK } from '../context/KeyContext';
 import { useAuth } from '../context/AuthContext';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
+import { useCurrency } from '../context/CurrencyContext';
+import { CleanMarkdown } from '../components/CleanMarkdown';
 
 export function Insights() {
   const { user } = useAuth();
   const { isDemo, dashboard: demoDashboard } = useDemoWorkspace();
   const { hasKey } = useBYOK();
+  const { currency, formatAmount } = useCurrency();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
@@ -308,24 +311,24 @@ export function Insights() {
 
               <div>
                 <p className="text-3xl font-extrabold text-white mt-1 font-mono tracking-tight">
-                  +₹{netSavings.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  {netSavings >= 0 ? '+' : ''}{currency.symbol}{netSavings.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-400 font-mono">
                   <span className="px-2 py-0.5 rounded-md bg-black/40 border border-white/10 text-cyan-300 font-bold">
                     {savingsRate}% Retained
                   </span>
-                  <span>of ₹{monthlyIncome.toLocaleString('en-IN')}</span>
+                  <span>of {currency.symbol}{monthlyIncome.toLocaleString('en-US')}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 pt-4 mt-2 border-t border-white/[0.06] text-xs font-mono">
                 <div>
                   <span className="text-slate-500 text-[10px]">Inflow:</span>
-                  <p className="font-semibold text-white">₹{monthlyIncome.toLocaleString('en-IN')}</p>
+                  <p className="font-semibold text-white">{currency.symbol}{monthlyIncome.toLocaleString('en-US')}</p>
                 </div>
                 <div>
                   <span className="text-slate-500 text-[10px]">Outflow:</span>
-                  <p className="font-semibold text-rose-400">₹{monthlyExpenses.toLocaleString('en-IN')}</p>
+                  <p className="font-semibold text-rose-400">{currency.symbol}{monthlyExpenses.toLocaleString('en-US')}</p>
                 </div>
               </div>
             </div>
@@ -341,7 +344,7 @@ export function Insights() {
 
               <div>
                 <p className="text-3xl font-extrabold text-white mt-1 font-mono tracking-tight">
-                  ₹{((monthlyExpenses / 30) || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  {currency.symbol}{((monthlyExpenses / 30) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}
                   <span className="text-xs font-normal text-slate-400 font-sans"> / day</span>
                 </p>
                 <p className="text-xs text-slate-400 mt-2 font-mono">
@@ -390,16 +393,16 @@ export function Insights() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-black/40 border border-white/[0.06] text-xs font-mono">
               <div>
                 <span className="text-slate-500">12-Month Total Inflow</span>
-                <p className="text-base font-bold text-white mt-0.5">₹{totalYearIncome.toLocaleString('en-IN')}</p>
+                <p className="text-base font-bold text-white mt-0.5">{currency.symbol}{totalYearIncome.toLocaleString('en-US')}</p>
               </div>
               <div>
                 <span className="text-slate-500">12-Month Total Outflow</span>
-                <p className="text-base font-bold text-rose-400 mt-0.5">₹{totalYearExpense.toLocaleString('en-IN')}</p>
+                <p className="text-base font-bold text-rose-400 mt-0.5">{currency.symbol}{totalYearExpense.toLocaleString('en-US')}</p>
               </div>
               <div>
                 <span className="text-slate-500">12-Month Net Wealth Saved</span>
                 <p className="text-base font-bold text-cyan-400 mt-0.5">
-                  +₹{totalYearSavings.toLocaleString('en-IN')} <span className="text-slate-400 text-xs">({yearSavingsRate}%)</span>
+                  {totalYearSavings >= 0 ? '+' : ''}{currency.symbol}{totalYearSavings.toLocaleString('en-US')} <span className="text-slate-400 text-xs">({yearSavingsRate}%)</span>
                 </p>
               </div>
             </div>
@@ -419,7 +422,7 @@ export function Insights() {
                       className={`flex-1 flex flex-col items-center h-full justify-end group cursor-pointer p-1 rounded-xl transition ${
                         isCurrentSelection ? 'bg-violet-500/10 ring-1 ring-violet-500/40' : 'hover:bg-white/[0.02]'
                       }`}
-                      title={`${m.label}: Income ₹${m.income.toLocaleString()} | Outflow ₹${m.expense.toLocaleString()} | Savings ₹${m.savings.toLocaleString()}`}
+                      title={`${m.label}: Inflow ${currency.symbol}${m.income.toLocaleString()} | Outflow ${currency.symbol}${m.expense.toLocaleString()} | Savings ${currency.symbol}${m.savings.toLocaleString()}`}
                     >
                       <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-48">
                         {/* Expense Bar */}
@@ -467,15 +470,15 @@ export function Insights() {
           {narrativeText && (
             <div className="p-6 sm:p-8 rounded-3xl apple-glass-card border border-white/[0.08] shadow-xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-violet-300 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-                  <span>Groq LLaMA 3.1 Synthesis ({monthName})</span>
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Financial Advisor Synthesis ({monthName})</span>
                 </span>
-                <span className="text-[10px] font-mono text-slate-500">Autonomous Edge Analysis</span>
+                <span className="text-[10px] font-mono text-slate-400">Autonomous Edge Analysis</span>
               </div>
 
-              <div className="text-slate-300 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-mono">
-                {narrativeText}
+              <div className="text-slate-200 text-xs sm:text-sm leading-relaxed font-sans">
+                <CleanMarkdown content={narrativeText} />
               </div>
             </div>
           )}

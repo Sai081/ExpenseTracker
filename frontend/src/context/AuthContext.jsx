@@ -19,9 +19,12 @@ export function AuthProvider({ children }) {
             const profile = await api.getMe().catch(() => null);
             setUser(profile || {
               id: session.user.id,
+              supabase_id: session.user.id,
               email: session.user.email,
               username: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-              avatar_url: session.user.user_metadata?.avatar_url
+              avatar_url: session.user.user_metadata?.avatar_url,
+              is_google: session.user.app_metadata?.provider === 'google' || !session.user.app_metadata?.provider || true,
+              has_password: false
             });
             setLoading(false);
             return;
@@ -46,9 +49,12 @@ export function AuthProvider({ children }) {
           const profile = await api.getMe().catch(() => null);
           setUser(profile || {
             id: session.user.id,
+            supabase_id: session.user.id,
             email: session.user.email,
             username: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
-            avatar_url: session.user.user_metadata?.avatar_url
+            avatar_url: session.user.user_metadata?.avatar_url,
+            is_google: session.user.app_metadata?.provider === 'google' || !session.user.app_metadata?.provider || true,
+            has_password: false
           });
         } else if (event === 'SIGNED_OUT') {
           setStoredAuthToken('');
@@ -68,7 +74,7 @@ export function AuthProvider({ children }) {
         const { data, error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
-            redirectTo: window.location.origin
+            redirectTo: `${window.location.origin}/dashboard`
           }
         });
         if (error) {

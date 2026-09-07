@@ -3,7 +3,7 @@ from flask_login import current_user
 from datetime import datetime, date
 from sqlalchemy import func, extract
 from app import db
-from app.models import Transaction, Budget, Category, Income
+from app.models import Transaction, Budget, Category
 from app.routes.api import success_response, error_response, api_login_required
 
 dashboard_api_bp = Blueprint('dashboard_api', __name__, url_prefix='/dashboard')
@@ -29,20 +29,14 @@ def get_dashboard_summary():
     month_name = datetime(year_int, month_int, 1).strftime("%B %Y")
     is_current_month = (month_int == today.month and year_int == today.year)
 
-    # Monthly Income: sum from Transaction or Income model for target month
+    # Monthly Income: sum from Transaction model for target month
     monthly_income = db.session.query(func.sum(Transaction.amount)).filter(
         Transaction.user_id == user_id,
         Transaction.type == 'income',
         extract('month', Transaction.date) == month_int,
         extract('year', Transaction.date) == year_int
-    ).scalar()
-    if monthly_income is None:
-        monthly_income = db.session.query(func.sum(Income.amount)).filter(
-            Income.user_id == user_id,
-            extract('month', Income.date) == month_int,
-            extract('year', Income.date) == year_int
-        ).scalar() or 0
-    monthly_income = float(monthly_income or 0)
+    ).scalar() or 0.0
+    monthly_income = float(monthly_income)
 
     # Monthly Expenses for target month
     monthly_expenses = db.session.query(func.sum(Transaction.amount)).filter(

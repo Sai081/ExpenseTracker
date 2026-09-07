@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function Budgets() {
+  const { currency } = useCurrency();
   const { isDemo, budgets: demoBudgets, addBudget, updateBudget, removeBudget } = useDemoWorkspace();
   const [budgetData, setBudgetData] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -172,7 +174,7 @@ export function Budgets() {
             TOTAL CEILING
           </span>
           <p className="text-2xl sm:text-3xl font-extrabold text-white mt-2 font-mono">
-            ₹{totalBudget.toLocaleString('en-IN')}
+            {currency.symbol}{totalBudget.toLocaleString('en-US')}
           </p>
           <span className="text-[11px] text-slate-500 mt-1 block font-mono">Monthly allocated capital limit</span>
         </div>
@@ -182,7 +184,7 @@ export function Budgets() {
             RECORDED OUTFLOW
           </span>
           <p className="text-2xl sm:text-3xl font-extrabold text-rose-400 mt-2 font-mono">
-            ₹{totalSpent.toLocaleString('en-IN')}
+            {currency.symbol}{totalSpent.toLocaleString('en-US')}
           </p>
           <span className="text-[11px] text-slate-500 mt-1 block font-mono">Across active budgeted envelopes</span>
         </div>
@@ -250,7 +252,7 @@ export function Budgets() {
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-sm font-bold text-white">{b.category_name}</span>
-                      <p className="text-[11px] text-slate-500 font-mono">Cap: ₹{b.amount.toLocaleString('en-IN')}</p>
+                      <p className="text-[11px] text-slate-500 font-mono">Cap: {currency.symbol}{b.amount.toLocaleString('en-US')}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -291,9 +293,9 @@ export function Budgets() {
                   </div>
 
                   <div className="flex items-center justify-between text-xs text-slate-400 font-mono pt-0.5">
-                    <span>Spent: ₹{b.spent.toLocaleString('en-IN')}</span>
+                    <span>Spent: {currency.symbol}{b.spent.toLocaleString('en-US')}</span>
                     <span className={b.remaining < 0 ? 'text-rose-400 font-bold' : 'text-slate-400'}>
-                      {b.remaining < 0 ? `Over by ₹${Math.abs(b.remaining).toLocaleString('en-IN')}` : `Available: ₹${b.remaining.toLocaleString('en-IN')}`}
+                      {b.remaining < 0 ? `Over by ${currency.symbol}${Math.abs(b.remaining).toLocaleString('en-US')}` : `Available: ${currency.symbol}${b.remaining.toLocaleString('en-US')}`}
                     </span>
                   </div>
                 </div>
@@ -342,10 +344,10 @@ export function Budgets() {
 
               <div>
                 <label className="block text-xs font-mono uppercase text-slate-400 mb-1.5">
-                  Monthly Cap (₹)
+                  Monthly Cap ({currency.symbol})
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-mono font-bold text-xs">₹</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-mono font-bold text-xs">{currency.symbol}</span>
                   <input
                     type="number"
                     step="any"

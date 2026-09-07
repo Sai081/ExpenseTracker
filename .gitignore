@@ -1,8 +1,35 @@
+# Environment variables & secrets
 .env
+.env.local
+
+# Python bytecode & cache
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
+
+# Virtual environments
 .venv/
+venv/
+ENV/
+
+# OS metadata
 .DS_Store
+*/.DS_Store
+*.DS_Store
+Thumbs.db
+
+# Database & local instance data
 instance/
+*.sqlite
+*.sqlite3
+*.db
+app/static/uploads/avatar_*
+app/static/uploads/user_*
+
+# Node & Frontend dependencies
 frontend/node_modules/
 frontend/.vite/
+
+# Compiled assets in frontend dist that churn on every build
+frontend/dist/assets/

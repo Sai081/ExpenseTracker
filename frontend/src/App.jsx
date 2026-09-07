@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { KeyProvider } from './context/KeyContext';
 import { DemoWorkspaceProvider } from './context/DemoWorkspaceContext';
+import { CurrencyProvider } from './context/CurrencyContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Navbar } from './components/Navbar';
 import { AddTransactionModal } from './components/AddTransactionModal';
@@ -11,6 +13,7 @@ import { AssistantWidget } from './components/AssistantWidget';
 import { BYOKModal } from './components/BYOKModal';
 import { CustomCursor } from './components/CustomCursor';
 
+import { Docs } from './pages/Docs';
 import { Landing } from './pages/Landing';
 import { Dashboard } from './pages/Dashboard';
 import { Transactions } from './pages/Transactions';
@@ -22,7 +25,7 @@ import { Login } from './pages/Login';
 import { Chat } from './pages/Chat';
 
 function AppLayout() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
@@ -32,7 +35,7 @@ function AppLayout() {
     setRefreshKey((k) => k + 1);
   };
 
-  const isPublicPage = (!user && location.pathname === '/') || location.pathname === '/login' || location.pathname === '/landing';
+  const isPublicPage = (!user && location.pathname === '/') || location.pathname === '/login' || location.pathname === '/landing' || location.pathname === '/docs';
 
   return (
     <div className="min-h-screen bg-[#071312] text-slate-100 flex flex-col relative font-sans">
@@ -50,10 +53,11 @@ function AppLayout() {
         <Navbar onOpenAddModal={() => setIsAddOpen(true)} />
       )}
 
-      <main className={`relative z-10 ${isPublicPage ? "flex-1 w-full" : "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6"}`}>
+      <main className={`relative z-10 ${isPublicPage ? "flex-1 w-full" : "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24"}`}>
         <Routes>
           <Route path="/" element={user ? <Dashboard key={refreshKey} /> : <Landing />} />
           <Route path="/landing" element={<Landing />} />
+          <Route path="/docs" element={<Docs />} />
           <Route path="/login" element={<Login />} />
 
           <Route
@@ -123,6 +127,29 @@ function AppLayout() {
         </Routes>
       </main>
 
+      {/* Logout Option on the very bottom of the app */}
+      {user && !isPublicPage && (
+        <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400 font-mono">
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>ExpenseTracker AI • Sovereign Ledger</span>
+          </div>
+          <button
+            onClick={async () => {
+              await signOut();
+              window.location.href = '/login';
+            }}
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl apple-glass-pill text-slate-400 hover:text-rose-300 hover:border-rose-500/30 transition text-xs font-mono"
+            title="Sign out of ExpenseTracker"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </footer>
+      )}
+
+
+
       {/* Global Modals & Floating Assistant */}
       {user && (
         <>
@@ -155,7 +182,9 @@ export default function App() {
       <AuthProvider>
         <DemoWorkspaceProvider>
           <KeyProvider>
-            <AppLayout />
+            <CurrencyProvider>
+              <AppLayout />
+            </CurrencyProvider>
           </KeyProvider>
         </DemoWorkspaceProvider>
       </AuthProvider>

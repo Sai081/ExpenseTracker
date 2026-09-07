@@ -2,26 +2,34 @@ from flask import Blueprint, request
 from flask_login import current_user
 from datetime import datetime, date
 from decimal import Decimal
+from sqlalchemy import or_
 from app import db
-from app.models import Transaction, Category, Expense, Income
+from app.models import Transaction, Category
 from app.routes.api import success_response, error_response, api_login_required
 
 transaction_api_bp = Blueprint('transaction_api', __name__, url_prefix='/transactions')
 
 def serialize_transaction(t):
+    cat_name = "Uncategorized"
+    try:
+        if getattr(t, 'category', None) and getattr(t.category, 'name', None):
+            cat_name = t.category.name
+    except Exception:
+        pass
+
     return {
         "id": t.id,
         "user_id": t.user_id,
         "type": t.type,
         "amount": float(t.amount) if t.amount is not None else 0.0,
         "category_id": t.category_id,
-        "category_name": t.category.name if t.category else "Uncategorized",
+        "category_name": cat_name,
         "description": t.description or "",
         "date": t.date.strftime("%Y-%m-%d") if t.date else None,
         "payment_method": t.payment_method or "",
-        "tags": t.tags or "",
-        "notes": t.notes or "",
-        "created_at": t.created_at.strftime("%Y-%m-%d %H:%M:%S") if t.created_at else None
+        "tags": getattr(t, 'tags', '') or "",
+        "notes": getattr(t, 'notes', '') or "",
+        "created_at": t.created_at.strftime("%Y-%m-%d %H:%M:%S") if getattr(t, 'created_at', None) else None
     }
 
 @transaction_api_bp.route('', methods=['GET'])
@@ -62,11 +70,12 @@ def get_transactions():
 
     if search:
         search_pattern = f"%{search.strip()}%"
-        query = query.filter(
-            (Transaction.description.ilike(search_pattern)) |
-            (Transaction.notes.ilike(search_pattern)) |
-            (Transaction.tags.ilike(search_pattern))
-        )
+        search_conditions = [Transaction.description.ilike(search_pattern)]
+        if hasattr(Transaction, 'notes'):
+            search_conditions.append(Transaction.notes.ilike(search_pattern))
+        if hasattr(Transaction, 'tags'):
+            search_conditions.append(Transaction.tags.ilike(search_pattern))
+        query = query.filter(or_(*search_conditions))
 
     # Sorting
     if sort_by == 'amount':
@@ -137,17 +146,21 @@ def create_transaction():
     else:
         category_id = None
 
-    new_txn = Transaction(
-        user_id=current_user.id,
-        type=t_type,
-        amount=amount,
-        category_id=category_id,
-        description=description,
-        date=txn_date,
-        payment_method=payment_method,
-        tags=tags,
-        notes=notes
-    )
+    txn_args = {
+        'user_id': current_user.id,
+        'type': t_type,
+        'amount': amount,
+        'category_id': category_id,
+        'description': description,
+        'date': txn_date,
+        'payment_method': payment_method
+    }
+    if hasattr(Transaction, 'tags'):
+        txn_args['tags'] = tags
+    if hasattr(Transaction, 'notes'):
+        txn_args['notes'] = notes
+
+    new_txn = Transaction(**txn_args)
 
     try:
         db.session.add(new_txn)
@@ -205,9 +218,9 @@ def update_transaction(id):
 
     if 'payment_method' in data:
         txn.payment_method = data['payment_method']
-    if 'tags' in data:
+    if hasattr(Transaction, 'tags') and 'tags' in data:
         txn.tags = data['tags']
-    if 'notes' in data:
+    if hasattr(Transaction, 'notes') and 'notes' in data:
         txn.notes = data['notes']
 
     try:

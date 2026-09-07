@@ -1,9 +1,8 @@
 from app import db
 from flask_login import UserMixin
-from datetime import datetime
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'user'
+    __tablename__ = "user"
     
     id = db.Column(db.Integer, primary_key=True)
     supabase_id = db.Column(db.String(64), unique=True, index=True, nullable=True)
@@ -13,5 +12,5 @@ class User(UserMixin, db.Model):
     avatar_url = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    expenses = db.relationship('Expense', back_populates='user', cascade='all, delete-orphan')
-    categories = db.relationship('Category', backref='user', cascade='all, delete-orphan')
+    transactions = db.relationship("Transaction", back_populates="user", cascade="all, delete-orphan")
+    categories = db.relationship("Category", back_populates="user", cascade="all, delete-orphan")

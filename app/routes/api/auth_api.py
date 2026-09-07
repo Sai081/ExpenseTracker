@@ -148,6 +148,7 @@ def logout():
     return success_response(message="Logged out successfully")
 
 @auth_api_bp.route('/me', methods=['GET'])
+@api_login_required
 def get_me():
     if not current_user.is_authenticated:
         return error_response("Not authenticated", status_code=401)
@@ -342,3 +343,21 @@ def demo_login():
         },
         message="Logged in as Demo User"
     )
+
+@auth_api_bp.route('/account', methods=['DELETE'])
+@api_login_required
+def delete_account():
+    user = current_user
+    try:
+        from app.models import Transaction, Budget, Category
+        Transaction.query.filter_by(user_id=user.id).delete()
+        Budget.query.filter_by(user_id=user.id).delete()
+        Category.query.filter_by(user_id=user.id).delete()
+        db.session.delete(user)
+        db.session.commit()
+        logout_user()
+        return success_response(message="Account and all associated records deleted successfully")
+    except Exception as e:
+        db.session.rollback()
+        return error_response(f"Failed to delete account: {str(e)}", status_code=500)
+

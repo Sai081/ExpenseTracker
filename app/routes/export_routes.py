@@ -39,11 +39,12 @@ def export_csv():
     user = get_export_user()
     if not user:
         return "Authentication required to export transactions", 401
+    currency_code = (request.args.get('currency') or request.headers.get('X-Currency') or 'INR').upper()
     try:
         transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.date.desc()).all()
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['Date', 'Type', 'Category', 'Description', 'Amount', 'Payment Method', 'Tags', 'Notes'])
+        writer.writerow(['Date', 'Type', 'Category', 'Description', f'Amount ({currency_code})', 'Payment Method', 'Tags', 'Notes'])
 
         for t in transactions:
             writer.writerow([
@@ -53,15 +54,15 @@ def export_csv():
                 t.description or '',
                 float(t.amount) if t.amount else 0.0,
                 t.payment_method or '',
-                t.tags or '',
-                t.notes or ''
+                getattr(t, 'tags', '') or '',
+                getattr(t, 'notes', '') or ''
             ])
 
         output.seek(0)
         return Response(
             output.getvalue(),
             mimetype='text/csv',
-            headers={'Content-Disposition': f'attachment;filename=transactions_user_{user.id}.csv'}
+            headers={'Content-Disposition': f'attachment;filename=transactions_{currency_code}_{user.id}.csv'}
         )
     except Exception as e:
         return f"Error generating export file: {str(e)}", 500
@@ -72,6 +73,8 @@ def export_pdf():
     user = get_export_user()
     if not user:
         return "Authentication required to export transactions", 401
+    currency_code = (request.args.get('currency') or request.headers.get('X-Currency') or 'INR').upper()
+    currency_symbol = request.args.get('currency_symbol') or request.headers.get('X-Currency-Symbol') or ('$' if currency_code == 'USD' else ('€' if currency_code == 'EUR' else ('£' if currency_code == 'GBP' else '₹')))
     try:
         transactions = Transaction.query.filter_by(user_id=user.id).order_by(Transaction.date.desc()).all()
 
@@ -81,7 +84,7 @@ def export_pdf():
         y = height - 50
 
         pdf.setFont("Helvetica-Bold", 14)
-        pdf.drawString(30, y, "ExpenseTracker - Transaction Report")
+        pdf.drawString(30, y, f"ExpenseTracker - Transaction Report ({currency_code})")
         y -= 30
 
         pdf.setFont("Helvetica-Bold", 10)
@@ -107,7 +110,7 @@ def export_pdf():
                 pdf.setFont("Helvetica", 9)
 
             date_str = tx.date.strftime('%Y-%m-%d') if tx.date else 'N/A'
-            amount_str = f"Rs. {float(tx.amount):.2f}"
+            amount_str = f"{currency_symbol} {float(tx.amount):.2f}"
             cat_name = tx.category.name if tx.category else "Uncategorized"
             desc = (tx.description or "N/A")[:45]
 

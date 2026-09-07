@@ -22,9 +22,11 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function Dashboard() {
   const { user } = useAuth();
+  const { currency } = useCurrency();
   const { dashboard: demoDashboard, voiceHistory: demoVoiceHistory } = useDemoWorkspace();
   const isDemo = user?.id === 2 || user?.email === 'demo@expensetracker.local';
   const [data, setData] = useState(null);
@@ -122,6 +124,21 @@ export function Dashboard() {
     );
   }
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 22) return 'Good evening';
+    return 'Welcome back';
+  };
+
+  const getAmountFontSize = (val) => {
+    const absVal = Math.abs(Number(val) || 0);
+    if (absVal >= 1000000000) return 'text-lg sm:text-xl';
+    if (absVal >= 10000000) return 'text-xl sm:text-2xl';
+    return 'text-2xl sm:text-3xl';
+  };
+
   return (
     <div className="finance-workspace space-y-8 animate-fade-in pb-20 font-['Space_Grotesk',sans-serif]">
       {/* Top Banner with Telemetry Header and Month Navigator */}
@@ -134,7 +151,7 @@ export function Dashboard() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-['Syne',sans-serif] mt-0.5">
-            Good morning, here is your money story.
+            {getGreeting()}, here is your money story.
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             A clear view of what came in, what went out, and what you can do next for <strong className="text-white font-semibold">{monthName}</strong>
@@ -194,20 +211,23 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* 4 Metric Cockpit Cards (from Screenshot) */}
+      {/* 4 Metric Cockpit Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Gross Inflow */}
-        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] hover:border-violet-500/40 transition-all hover-lift space-y-3">
+        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] min-w-0 overflow-hidden hover:border-violet-500/40 transition-all hover-lift space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
               GROSS INFLOW (MONTHLY)
             </span>
-            <div className="p-1.5 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
+            <div className="p-1.5 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 shrink-0">
               <ArrowDownLeft className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
-            +₹{summary.monthly_income?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <p 
+            className={`${getAmountFontSize(summary.monthly_income)} font-extrabold text-white font-mono tracking-tight whitespace-nowrap overflow-hidden text-ellipsis`}
+            title={`+${currency.symbol}${summary.monthly_income?.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+          >
+            +{currency.symbol}{summary.monthly_income?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-emerald-400 font-mono">↑ Earned in {monthName.split(' ')[0]}</span>
@@ -218,17 +238,20 @@ export function Dashboard() {
         </div>
 
         {/* Burn Rate */}
-        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] hover:border-rose-500/40 transition-all hover-lift space-y-3">
+        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] min-w-0 overflow-hidden hover:border-rose-500/40 transition-all hover-lift space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
               BURN RATE (MONTHLY)
             </span>
-            <div className="p-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+            <div className="p-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 shrink-0">
               <ArrowUpRight className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-rose-400 font-mono tracking-tight">
-            -₹{summary.monthly_expenses?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <p 
+            className={`${getAmountFontSize(summary.monthly_expenses)} font-extrabold text-rose-400 font-mono tracking-tight whitespace-nowrap overflow-hidden text-ellipsis`}
+            title={`-${currency.symbol}${summary.monthly_expenses?.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+          >
+            -{currency.symbol}{summary.monthly_expenses?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-cyan-400 font-mono">↓ Outflow for {monthName.split(' ')[0]}</span>
@@ -242,19 +265,22 @@ export function Dashboard() {
         </div>
 
         {/* Net Savings Velocity */}
-        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] hover:border-cyan-500/40 transition-all hover-lift space-y-3">
+        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] min-w-0 overflow-hidden hover:border-cyan-500/40 transition-all hover-lift space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
               NET SAVINGS VELOCITY
             </span>
-            <div className="p-1.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <div className="p-1.5 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0">
               <PiggyBank className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${
-            (summary.net_savings || 0) >= 0 ? 'text-white' : 'text-rose-400'
-          }`}>
-            {(summary.net_savings || 0) >= 0 ? '+' : ''}₹{summary.net_savings?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <p 
+            className={`${getAmountFontSize(summary.net_savings)} font-extrabold font-mono tracking-tight whitespace-nowrap overflow-hidden text-ellipsis ${
+              (summary.net_savings || 0) >= 0 ? 'text-white' : 'text-rose-400'
+            }`}
+            title={`${(summary.net_savings || 0) >= 0 ? '+' : ''}${currency.symbol}${summary.net_savings?.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+          >
+            {(summary.net_savings || 0) >= 0 ? '+' : ''}{currency.symbol}{summary.net_savings?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
           <div className="flex items-center justify-between text-[11px]">
             <span className="text-cyan-400 font-mono">✓ Net wealth retained</span>
@@ -265,17 +291,20 @@ export function Dashboard() {
         </div>
 
         {/* Daily Mean Burn */}
-        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] hover:border-violet-500/40 transition-all hover-lift space-y-3">
+        <div className="p-6 rounded-3xl apple-glass-card border border-white/[0.08] min-w-0 overflow-hidden hover:border-violet-500/40 transition-all hover-lift space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
               DAILY MEAN BURN
             </span>
-            <div className="p-1.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <div className="p-1.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">
               <Calendar className="w-3.5 h-3.5" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight">
-            ₹{summary.today_expenses?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <p 
+            className={`${getAmountFontSize(summary.today_expenses)} font-extrabold text-white font-mono tracking-tight whitespace-nowrap overflow-hidden text-ellipsis`}
+            title={`${currency.symbol}${summary.today_expenses?.toLocaleString('en-US', { minimumFractionDigits: 2 })} /day`}
+          >
+            {currency.symbol}{summary.today_expenses?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
             <span className="text-xs font-normal text-slate-400 font-sans"> /day</span>
           </p>
           <div className="flex items-center justify-between text-[11px]">
@@ -287,6 +316,7 @@ export function Dashboard() {
             <div className="h-full bg-violet-400 w-[55%] rounded-full" />
           </div>
         </div>
+
       </div>
 
       {isDemo && (
@@ -339,7 +369,7 @@ export function Dashboard() {
                   {summary.budget_usage_percent || 0}%
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
-                  ₹{summary.total_spent?.toLocaleString('en-IN')} / ₹{summary.total_budget?.toLocaleString('en-IN')}
+                  {currency.symbol}{summary.total_spent?.toLocaleString('en-US')} / {currency.symbol}{summary.total_budget?.toLocaleString('en-US')}
                 </span>
               </div>
 
@@ -430,7 +460,7 @@ export function Dashboard() {
                     <div className="flex justify-between text-xs font-medium">
                       <span className="text-slate-200">{item.category}</span>
                       <span className="text-slate-400 font-mono font-bold">
-                        ₹{item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pct}%)
+                        {currency.symbol}{item.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ({pct}%)
                       </span>
                     </div>
                     <div className="w-full h-2 bg-black/40 rounded-full overflow-hidden border border-white/[0.04]">
@@ -503,7 +533,7 @@ export function Dashboard() {
                     <p className={`text-base font-extrabold font-mono ${
                       isExpense ? 'text-rose-400' : 'text-emerald-400'
                     }`}>
-                      {isExpense ? '-' : '+'}₹{txn.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {isExpense ? '-' : '+'}{currency.symbol}{txn.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>

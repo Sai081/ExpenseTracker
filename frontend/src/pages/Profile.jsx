@@ -13,15 +13,22 @@ import {
   ExternalLink,
   Trash2,
   Cpu,
-  Database
+  Database,
+  AlertTriangle,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBYOK } from '../context/KeyContext';
 import { api } from '../lib/api';
 
 export function Profile() {
-  const { user, updateLocalUser } = useAuth();
+  const { user, updateLocalUser, signOut } = useAuth();
   const { groqKey, saveKey, clearKey, hasKey } = useBYOK();
+
+  // Delete Account State
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Profile Edit State
   const [username, setUsername] = useState(user?.username || '');
@@ -140,6 +147,19 @@ export function Profile() {
     saveKey(inputKey);
     setKeySuccess(true);
     setTimeout(() => setKeySuccess(false), 3000);
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      await api.deleteAccount();
+      await signOut();
+      window.location.href = '/login';
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete account.');
+      setDeleteLoading(false);
+    }
   };
 
   const isGoogleUser = user?.is_google === true || user?.supabase_id || user?.has_password === false;
@@ -443,6 +463,82 @@ export function Profile() {
             </button>
           </form>
         )}
+      </div>
+
+      {/* Danger Zone: Delete Account */}
+      <div className="p-6 sm:p-8 rounded-3xl apple-glass-card border border-rose-500/25 shadow-xl space-y-4">
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">Danger Zone</h3>
+              <p className="text-xs text-slate-400 font-mono">Permanently remove your account and all financial telemetry</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-xs text-rose-300/90 leading-relaxed font-mono">
+          Deleting your account will purge all associated transactions, monthly budgets, custom categories, and personal security keys. This action cannot be undone.
+        </p>
+
+        {deleteError && (
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono">
+            <AlertCircle className="w-4 h-4" />
+            <span>{deleteError}</span>
+          </div>
+        )}
+
+        {!showDeleteConfirm ? (
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-5 py-2.5 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 font-semibold text-xs transition active:scale-[0.98] flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete Account Permanently</span>
+            </button>
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-black/50 border border-rose-500/30 space-y-3">
+            <p className="text-xs font-bold text-white">Are you absolutely sure you want to delete your account?</p>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 rounded-xl apple-glass-pill text-xs text-slate-400 hover:text-white transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={handleDeleteAccount}
+                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-lg shadow-rose-600/30 flex items-center gap-2"
+              >
+                {deleteLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Yes, Delete Everything</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Logout Option at the Bottom */}
+      <div className="pt-4 flex justify-center">
+        <button
+          type="button"
+          onClick={async () => {
+            await signOut();
+            window.location.href = '/login';
+          }}
+          className="px-6 py-2.5 rounded-full apple-glass-pill hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-400 hover:text-rose-300 font-mono text-xs transition flex items-center gap-2"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Sign Out of ExpenseTracker</span>
+        </button>
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { useBYOK } from '../context/KeyContext';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
+import { CleanMarkdown } from '../components/CleanMarkdown';
 
 export function Chat() {
   const { hasKey } = useBYOK();
@@ -248,10 +249,10 @@ export function Chat() {
                 className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
                   isUser
                     ? 'bg-emerald-600 text-white rounded-tr-none'
-                    : 'glass-input text-slate-200 rounded-tl-none whitespace-pre-wrap shadow-sm'
+                    : 'glass-input text-slate-200 rounded-tl-none shadow-sm'
                 }`}
               >
-                {msg.content}
+                {isUser ? msg.content : <CleanMarkdown content={msg.content} />}
               </div>
             </div>
           );

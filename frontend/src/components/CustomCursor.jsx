@@ -49,8 +49,9 @@ export function CustomCursor() {
     const handleEnter = () => setVisibility(true);
 
     const animate = () => {
-      pointer.x += (pointer.targetX - pointer.x) * 0.2;
-      pointer.y += (pointer.targetY - pointer.y) * 0.2;
+      // Snappy high-speed tracking: eliminates dragging lag while keeping motion fluid
+      pointer.x += (pointer.targetX - pointer.x) * 0.65;
+      pointer.y += (pointer.targetY - pointer.y) * 0.65;
       if (haloRef.current) {
         haloRef.current.style.transform = `translate3d(${pointer.x}px, ${pointer.y}px, 0) translate(-50%, -50%) scale(${pressing ? 0.82 : 1})`;
       }

@@ -12,7 +12,38 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
+    # Configure CORS with explicit allowed origins to support credentialed requests
+    allowed_origins = [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'http://localhost:5000',
+        'http://127.0.0.1:5000',
+        'http://localhost:5001',
+        'http://127.0.0.1:5001',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+    ]
+    frontend_url = os.getenv('FRONTEND_URL', '')
+    if frontend_url:
+        for url in frontend_url.split(','):
+            cleaned = url.strip().rstrip('/')
+            if cleaned and cleaned not in allowed_origins:
+                allowed_origins.append(cleaned)
+
+    additional_origins = os.getenv('ALLOWED_ORIGINS', '')
+    if additional_origins:
+        for origin in additional_origins.split(','):
+            cleaned = origin.strip().rstrip('/')
+            if cleaned and cleaned not in allowed_origins:
+                allowed_origins.append(cleaned)
+
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": allowed_origins}},
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization", "X-Groq-Api-Key"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
+    )
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-12345')
 
     db_url = os.getenv('DATABASE_URL', '')

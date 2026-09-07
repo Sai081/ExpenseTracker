@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { 
   KeyRound, 
   Database, 
@@ -7,14 +6,17 @@ import {
   Trash2, 
   ExternalLink, 
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  Coins
 } from 'lucide-react';
 import { useBYOK } from '../context/KeyContext';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 export function Settings() {
   const { groqKey, saveKey, clearKey, hasKey } = useBYOK();
   const { user, isSupabaseConfigured } = useAuth();
+  const { currency, currencyCode, setCurrency, currencies } = useCurrency();
   const [inputKey, setInputKey] = useState(groqKey || '');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
@@ -118,6 +120,43 @@ export function Settings() {
             </a>
           </div>
         </form>
+      </div>
+
+      {/* Currency Preference Section */}
+      <div className="p-6 rounded-2xl apple-glass-card shadow-xl space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <Coins className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">Display Currency</h3>
+              <p className="text-xs text-slate-400">Choose your preferred currency symbol across all ledgers and analytics</p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-lg border bg-cyan-500/10 border-cyan-500/30 text-cyan-300">
+            {currency.symbol} {currency.code}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+          {currencies.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              onClick={() => setCurrency(c.code)}
+              className={`p-3 rounded-xl border text-left transition ${
+                currencyCode === c.code
+                  ? 'bg-cyan-500/15 border-cyan-400 text-white shadow-md shadow-cyan-500/10'
+                  : 'bg-black/30 border-white/10 text-slate-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <div className="text-lg font-bold font-mono text-white mb-0.5">{c.symbol}</div>
+              <div className="text-xs font-bold text-slate-200">{c.code}</div>
+              <div className="text-[10px] text-slate-500 truncate">{c.name.split('(')[0]}</div>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Database Status */}

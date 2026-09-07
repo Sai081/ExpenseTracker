@@ -4,12 +4,14 @@ import {
   LayoutDashboard, 
   History,
   PieChart,
-  Sparkles, 
+  Sparkles,
+  BookOpen, 
   LogOut, 
   Plus,
   User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 // Brand Logo Component with Telemetry Glow
 export function BrandLogo({ className = "w-7 h-7" }) {
@@ -38,6 +40,7 @@ export function BrandLogo({ className = "w-7 h-7" }) {
 
 export function Navbar({ onOpenAddModal }) {
   const { user, signOut } = useAuth();
+  const { currencyCode, setCurrency, currencies } = useCurrency();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -60,11 +63,12 @@ export function Navbar({ onOpenAddModal }) {
     { to: '/transactions', label: 'Transactions', icon: History },
     { to: '/budgets', label: 'Budgets', icon: PieChart },
     { to: '/insights', label: 'Insights', icon: Sparkles },
+    { to: '/docs', label: 'Docs', icon: BookOpen },
   ];
 
   return (
     <header
-      className={`sticky top-0 z-50 isolate w-full apple-glass transition-shadow duration-300 ${
+      className={`navbar fixed top-0 left-0 right-0 z-[1000] isolate w-full apple-glass transition-all duration-300 ${
         isScrolled
           ? 'border-b border-white/[0.08] shadow-[0_12px_36px_-10px_rgba(0,0,0,0.7)]'
           : 'border-b border-white/[0.06]'
@@ -98,11 +102,7 @@ export function Navbar({ onOpenAddModal }) {
             </div>
           </NavLink>
 
-          {/* Telemetry Status Pill */}
-          <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full apple-glass-pill text-[10px] font-mono text-slate-500">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
-            <span>Workspace synced</span>
-          </div>
+
 
           {/* Navigation Pill Container */}
           <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
@@ -134,8 +134,24 @@ export function Navbar({ onOpenAddModal }) {
           </nav>
         </div>
 
-        {/* Right Actions: Add, Profile & Sign Out */}
+        {/* Right Actions: Currency, Add, Profile & Sign Out */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Currency Switcher */}
+          <div className="relative">
+            <select
+              value={currencyCode}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="px-2.5 py-1 rounded-full apple-glass-pill text-xs font-mono font-bold text-emerald-300 hover:text-white border border-white/10 hover:border-emerald-500/30 bg-[#071312]/80 focus:outline-none cursor-pointer transition shadow-sm"
+              title="Change Display Currency"
+            >
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code} className="bg-[#0b1d1a] text-white font-sans">
+                  {c.symbol} {c.code}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Quick Add Action */}
           <button
             onClick={onOpenAddModal}
