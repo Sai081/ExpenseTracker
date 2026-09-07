@@ -4,8 +4,12 @@ from datetime import datetime
 from io import BytesIO
 from flask import Blueprint, Response, make_response, request
 from flask_login import current_user
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+try:
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 from app.models import Transaction
 from app.routes.api import verify_supabase_token
 
@@ -70,6 +74,8 @@ def export_csv():
 @export_bp.route('/export/pdf')
 @export_bp.route('/api/report/export_pdf')
 def export_pdf():
+    if not REPORTLAB_AVAILABLE:
+        return "PDF export module (reportlab) is not available", 501
     user = get_export_user()
     if not user:
         return "Authentication required to export transactions", 401
