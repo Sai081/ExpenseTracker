@@ -16,7 +16,8 @@ import {
   Activity,
   CreditCard,
   Layers,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
@@ -25,10 +26,12 @@ import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
 import { useCurrency } from '../context/CurrencyContext';
 
 export function Dashboard() {
-  const { user } = useAuth();
+  const auth = useAuth() || {};
+  const user = auth.user;
   const { currency } = useCurrency();
-  const { dashboard: demoDashboard, voiceHistory: demoVoiceHistory } = useDemoWorkspace();
-  const isDemo = user?.id === 2 || user?.email === 'demo@expensetracker.local';
+  const demoWorkspace = useDemoWorkspace() || {};
+  const { dashboard: demoDashboard = {}, voiceHistory: demoVoiceHistory = [] } = demoWorkspace;
+  const isDemo = Boolean(auth.isDemo || demoWorkspace.isDemo || user?.id === 2 || user?.email === 'demo@expensetracker.local');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -107,17 +110,39 @@ export function Dashboard() {
   }
 
   if (error && !data) {
+    const isColdStart = String(error).toLowerCase().includes('failed to fetch') || 
+                        String(error).toLowerCase().includes('network') || 
+                        String(error).toLowerCase().includes('504') ||
+                        String(error).toLowerCase().includes('502');
     return (
-      <div className="p-6 max-w-xl mx-auto mt-10 rounded-3xl apple-glass-card border border-rose-500/30 text-rose-300 flex items-center gap-3">
-        <AlertCircle className="w-6 h-6 shrink-0 text-rose-400" />
-        <div>
-          <p className="font-bold text-white">Telemetry Synchronization Failure</p>
-          <p className="text-xs text-rose-400 mt-0.5">{error}</p>
+      <div className="p-6 sm:p-8 max-w-xl mx-auto mt-10 rounded-3xl apple-glass-card border border-rose-500/30 text-rose-300 space-y-4">
+        <div className="flex items-start gap-3.5">
+          <AlertCircle className="w-6 h-6 shrink-0 text-rose-400 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-bold text-white text-base">Telemetry Synchronization Failure</p>
+            <p className="text-xs text-rose-300 leading-relaxed font-mono">{error}</p>
+            {isColdStart && (
+              <div className="mt-2 p-3 rounded-xl bg-black/40 border border-white/10 text-[11px] text-slate-400 font-sans leading-relaxed">
+                <strong className="text-white block mb-0.5">Render Backend Cold-Start:</strong>
+                Free-tier services on Render spin down during inactivity and take ~45 seconds to boot. Once your service finishes spinning up, clicking <strong>Retry Sync</strong> will load your live ledger.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 pt-2">
           <button 
             onClick={() => fetchSummary(selectedMonth)}
-            className="mt-3 px-4 py-1.5 text-xs font-semibold rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition magnetic-btn"
+            className="px-4 py-2 text-xs font-semibold rounded-xl bg-rose-600 text-white hover:bg-rose-500 transition magnetic-btn flex items-center gap-2"
           >
-            Retry Sync
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Retry Sync</span>
+          </button>
+          <button
+            onClick={() => setData(demoDashboard)}
+            className="px-4 py-2 text-xs font-semibold rounded-xl apple-glass-pill text-slate-300 hover:text-white transition"
+          >
+            Explore Demo Workspace
           </button>
         </div>
       </div>

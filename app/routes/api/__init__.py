@@ -46,7 +46,7 @@ def verify_supabase_token(token):
             del _TOKEN_CACHE[token]
 
     supabase_url = os.getenv("SUPABASE_URL", "https://skfjnwiyhtknluqtipff.supabase.co")
-    anon_key = os.getenv("SUPABASE_ANON_KEY", "")
+    anon_key = os.getenv("SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrZmpud2l5aHRrbmx1cXRpcGZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg2ODkyMzEsImV4cCI6MjEwNDI2NTIzMX0.C0PspOW-MY9kcVQyfai0-O8LZecqOwYffnAfP5RGvKk")
 
     headers = {"Authorization": f"Bearer {token}"}
     if anon_key:

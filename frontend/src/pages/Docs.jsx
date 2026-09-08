@@ -26,7 +26,8 @@ import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from '../components/Navbar';
 
 export function Docs() {
-  const { user } = useAuth();
+  const auth = useAuth() || {};
+  const user = auth.user;
   const [activeTab, setActiveTab] = useState('voice');
   const [copiedIndex, setCopiedIndex] = useState(null);
 

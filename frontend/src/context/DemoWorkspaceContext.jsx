@@ -13,8 +13,9 @@ function cloneDemoBudgets() {
 }
 
 export function DemoWorkspaceProvider({ children }) {
-  const { user } = useAuth();
-  const isDemo = user?.id === 2 || user?.email === 'demo@expensetracker.local';
+  const auth = useAuth() || {};
+  const user = auth.user;
+  const isDemo = Boolean(auth.isDemo || user?.id === 2 || user?.email === 'demo@expensetracker.local');
   const [transactions, setTransactions] = useState(cloneDemoTransactions);
   const [budgets, setBudgets] = useState(cloneDemoBudgets);
 

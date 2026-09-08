@@ -14,8 +14,8 @@ import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 
 export function Settings() {
-  const { groqKey, saveKey, clearKey, hasKey } = useBYOK();
-  const { user, isSupabaseConfigured } = useAuth();
+  const { groqKey, saveKey, clearKey, hasKey } = useBYOK() || {};
+  const { user, isSupabaseConfigured } = useAuth() || {};
   const { currency, currencyCode, setCurrency, currencies } = useCurrency();
   const [inputKey, setInputKey] = useState(groqKey || '');
   const [savedSuccess, setSavedSuccess] = useState(false);

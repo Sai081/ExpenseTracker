@@ -22,8 +22,10 @@ import { useBYOK } from '../context/KeyContext';
 import { api } from '../lib/api';
 
 export function Profile() {
-  const { user, updateLocalUser, signOut } = useAuth();
-  const { groqKey, saveKey, clearKey, hasKey } = useBYOK();
+  const auth = useAuth() || {};
+  const { user = null, updateLocalUser = () => {}, signOut = async () => {} } = auth;
+  const byok = useBYOK() || {};
+  const { groqKey = '', saveKey = () => {}, clearKey = () => {}, hasKey = false } = byok;
 
   // Delete Account State
   const [deleteLoading, setDeleteLoading] = useState(false);

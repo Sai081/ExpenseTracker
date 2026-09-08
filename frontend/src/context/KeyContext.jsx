@@ -11,7 +11,8 @@ import { useAuth } from './AuthContext';
 const KeyContext = createContext(null);
 
 export function KeyProvider({ children }) {
-  const { user } = useAuth();
+  const auth = useAuth() || {};
+  const user = auth.user;
   const [groqKey, setGroqKey] = useState(getStoredGroqKey(user?.id));
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -78,5 +79,18 @@ export function KeyProvider({ children }) {
 }
 
 export function useBYOK() {
-  return useContext(KeyContext);
+  const context = useContext(KeyContext);
+  if (!context) {
+    return {
+      groqKey: '',
+      saveKey: () => {},
+      clearKey: () => {},
+      hasKey: false,
+      isModalOpen: false,
+      openModal: () => {},
+      closeModal: () => {},
+      dismissModal: () => {}
+    };
+  }
+  return context;
 }

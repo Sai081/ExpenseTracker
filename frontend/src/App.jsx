@@ -26,7 +26,8 @@ import { Login } from './pages/Login';
 import { Chat } from './pages/Chat';
 
 function AppLayout() {
-  const { user, signOut } = useAuth();
+  const auth = useAuth() || {};
+  const { user = null, signOut = async () => {} } = auth;
   const location = useLocation();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);

@@ -21,7 +21,8 @@ import { useCurrency } from '../context/CurrencyContext';
 
 export function Transactions() {
   const { currency } = useCurrency();
-  const { isDemo, transactions: demoTransactions, removeTransaction, updateTransaction } = useDemoWorkspace();
+  const demoWorkspace = useDemoWorkspace() || {};
+  const { isDemo = false, transactions: demoTransactions = [], removeTransaction = () => {}, updateTransaction = () => {} } = demoWorkspace;
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -20,7 +20,8 @@ import { Reveal } from '../hooks/useReveal';
 import { BrandLogo } from '../components/Navbar';
 
 export function Login() {
-  const { user, signInWithGoogle, signInWithGoogleDirect, signInWithEmail, signUpWithEmail } = useAuth();
+  const auth = useAuth() || {};
+  const { user = null, signInWithGoogle, signInWithGoogleDirect, signInWithEmail, signUpWithEmail } = auth;
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');

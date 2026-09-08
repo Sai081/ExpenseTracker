@@ -29,9 +29,11 @@ import { useCurrency } from '../context/CurrencyContext';
 import { CleanMarkdown } from '../components/CleanMarkdown';
 
 export function Insights() {
-  const { user } = useAuth();
-  const { isDemo, dashboard: demoDashboard } = useDemoWorkspace();
-  const { hasKey } = useBYOK();
+  const auth = useAuth() || {};
+  const user = auth.user;
+  const demoWorkspace = useDemoWorkspace() || {};
+  const { isDemo = false, dashboard: demoDashboard = {} } = demoWorkspace;
+  const { hasKey } = useBYOK() || {};
   const { currency, formatAmount } = useCurrency();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);

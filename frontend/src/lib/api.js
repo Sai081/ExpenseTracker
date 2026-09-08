@@ -108,7 +108,18 @@ async function request(endpoint, options = {}) {
   };
 
   const res = await fetch(url, config);
-  const json = await res.json().catch(() => ({}));
+  const contentType = res.headers.get('content-type') || '';
+  let json = {};
+  if (contentType.includes('application/json')) {
+    json = await res.json().catch(() => ({}));
+  } else {
+    const text = await res.text().catch(() => '');
+    if (text.includes('<!doctype html>') || text.includes('<html')) {
+      throw new Error(
+        'Backend API returned an HTML page. Ensure your Render backend is running and VITE_API_BASE_URL points to your live API.'
+      );
+    }
+  }
 
   if (!res.ok || json.success === false) {
     const errorMsg = json.error || json.message || `Request failed (${res.status})`;

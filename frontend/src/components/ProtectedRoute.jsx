@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 export function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+  const auth = useAuth() || {};
+  const { user = null, loading = true } = auth;
 
   if (loading) {
     return (

@@ -19,7 +19,8 @@ import { useCurrency } from '../context/CurrencyContext';
 
 export function Budgets() {
   const { currency } = useCurrency();
-  const { isDemo, budgets: demoBudgets, addBudget, updateBudget, removeBudget } = useDemoWorkspace();
+  const demoWorkspace = useDemoWorkspace() || {};
+  const { isDemo = false, budgets: demoBudgets = [], addBudget = () => {}, updateBudget = () => {}, removeBudget = () => {} } = demoWorkspace;
   const [budgetData, setBudgetData] = useState(null);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

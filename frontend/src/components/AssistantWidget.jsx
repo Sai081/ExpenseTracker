@@ -17,8 +17,9 @@ import { CleanMarkdown } from './CleanMarkdown';
 import { BrandLogo } from './Navbar';
 
 export function AssistantWidget({ onTransactionCreated }) {
-  const { hasKey, openModal } = useBYOK();
-  const { isDemo, transactions: demoTransactions, budgets: demoBudgets } = useDemoWorkspace();
+  const { hasKey = false, openModal = () => {} } = useBYOK() || {};
+  const demoWorkspace = useDemoWorkspace() || {};
+  const { isDemo = false, transactions: demoTransactions = [], budgets: demoBudgets = [] } = demoWorkspace;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {

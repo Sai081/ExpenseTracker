@@ -220,11 +220,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const isDemo = user?.id === 2 || user?.email === 'demo@expensetracker.local' || false;
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
+        isDemo,
         signInWithGoogle,
         signInWithGoogleDirect,
         signInWithEmail,
@@ -241,5 +244,21 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    return {
+      user: null,
+      loading: true,
+      isDemo: false,
+      signInWithGoogle: async () => {},
+      signInWithGoogleDirect: async () => {},
+      signInWithEmail: async () => {},
+      signUpWithEmail: async () => {},
+      signInDemo: async () => {},
+      updateLocalUser: () => {},
+      signOut: async () => {},
+      isSupabaseConfigured: false
+    };
+  }
+  return context;
 }

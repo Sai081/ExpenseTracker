@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -22,6 +23,8 @@ def create_app():
         'http://127.0.0.1:5001',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
+        'https://expense-trackercom.vercel.app',
+        re.compile(r"^https://.*\.vercel\.app$")
     ]
     frontend_url = os.getenv('FRONTEND_URL', '')
     if frontend_url:

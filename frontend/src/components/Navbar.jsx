@@ -39,7 +39,8 @@ export function BrandLogo({ className = "w-7 h-7" }) {
 }
 
 export function Navbar({ onOpenAddModal }) {
-  const { user, signOut } = useAuth();
+  const auth = useAuth() || {};
+  const { user = null, signOut = async () => {} } = auth;
   const { currencyCode, setCurrency, currencies } = useCurrency();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);

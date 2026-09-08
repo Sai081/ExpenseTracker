@@ -18,8 +18,9 @@ import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
 import { CleanMarkdown } from '../components/CleanMarkdown';
 
 export function Chat() {
-  const { hasKey } = useBYOK();
-  const { isDemo, transactions: demoTransactions, budgets: demoBudgets } = useDemoWorkspace();
+  const { hasKey } = useBYOK() || {};
+  const demoWorkspace = useDemoWorkspace() || {};
+  const { isDemo = false, transactions: demoTransactions = [], budgets: demoBudgets = [] } = demoWorkspace;
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
