@@ -508,41 +508,42 @@ export function Dashboard() {
             {recentTxns.map((txn) => {
               const isExpense = txn.type === 'expense';
               return (
-                <div key={txn.id} className="py-3.5 flex items-center justify-between group hover:bg-white/[0.02] px-3 rounded-2xl transition">
-                  <div className="flex items-center gap-3.5">
-                    <div className={`p-2.5 rounded-xl border ${
+                <div key={txn.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3.5 rounded-2xl bg-white/[0.025] border border-white/[0.06] hover:border-white/15 transition min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
                       isExpense 
-                        ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
-                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' 
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                     }`}>
                       {isExpense ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-white">
+
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs sm:text-sm font-semibold text-white truncate">
                         {txn.description || txn.category || 'Transaction'}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 font-mono text-[11px]">
+                      </h4>
+                      <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-mono mt-0.5">
                         <span>{txn.date}</span>
                         <span>•</span>
-                        <span className="px-1.5 py-0.5 rounded bg-white/[0.04] text-slate-300">
+                        <span className="px-1.5 py-0.5 rounded bg-white/[0.05] text-slate-300 truncate max-w-[120px]">
                           {txn.category || 'Uncategorized'}
                         </span>
                         {txn.payment_method && (
                           <>
                             <span>•</span>
-                            <span className="capitalize">{txn.payment_method}</span>
+                            <span className="text-slate-400">{txn.payment_method}</span>
                           </>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <p className={`text-base font-extrabold font-mono ${
+                  <div className="self-end sm:self-center shrink-0 text-right pl-2">
+                    <span className={`font-mono text-xs sm:text-sm font-bold ${
                       isExpense ? 'text-rose-400' : 'text-emerald-400'
                     }`}>
-                      {isExpense ? '-' : '+'}{currency.symbol}{txn.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
+                      {isExpense ? '-' : '+'}{currency.symbol}{txn.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
                   </div>
                 </div>
               );

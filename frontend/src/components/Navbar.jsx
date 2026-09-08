@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate, Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   History,
   PieChart,
   Sparkles,
   BookOpen, 
-  LogOut, 
   Plus,
   User
 } from 'lucide-react';
@@ -40,9 +39,8 @@ export function BrandLogo({ className = "w-7 h-7" }) {
 
 export function Navbar({ onOpenAddModal }) {
   const auth = useAuth() || {};
-  const { user = null, signOut = async () => {} } = auth;
+  const { user = null } = auth;
   const { currencyCode, setCurrency, currencies } = useCurrency();
-  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -53,11 +51,6 @@ export function Navbar({ onOpenAddModal }) {
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/login');
-  };
 
   const navItems = [
     { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -99,7 +92,7 @@ export function Navbar({ onOpenAddModal }) {
                   AI
                 </span>
               </div>
-              <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase">Personal finance, made clear</span>
+              <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase hidden sm:block">Personal finance, made clear</span>
             </div>
           </NavLink>
 
@@ -187,19 +180,12 @@ export function Navbar({ onOpenAddModal }) {
                 )}
               </NavLink>
 
-              <button
-                onClick={handleSignOut}
-                className="p-2 text-slate-400 hover:text-rose-400 rounded-full hover:bg-white/[0.06] transition"
-                title="Sign out"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
             </div>
           )}
         </div>
       </div>
 
-      <nav className="md:hidden flex items-center justify-around gap-1 px-3 pb-2 pt-1 border-t border-white/[0.06]" aria-label="Primary navigation">
+      <nav className="md:hidden flex items-center gap-1.5 px-3 pb-2.5 pt-1.5 border-t border-white/[0.06] overflow-x-auto no-scrollbar scroll-smooth" aria-label="Primary navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -207,10 +193,16 @@ export function Navbar({ onOpenAddModal }) {
               key={item.to}
               to={item.to}
               end={item.to === '/dashboard'}
-              className={({ isActive }) => `flex min-w-0 flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold transition ${isActive ? 'text-cyan-200' : 'text-slate-500'}`}
+              className={({ isActive }) =>
+                `flex shrink-0 items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-cyan-500/15 text-cyan-200 border border-cyan-400/30 shadow-sm'
+                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                }`
+              }
             >
-              <Icon className="w-4 h-4" />
-              <span className="truncate">{item.label}</span>
+              <Icon className="w-3.5 h-3.5" />
+              <span>{item.label}</span>
             </NavLink>
           );
         })}

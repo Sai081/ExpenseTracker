@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { KeyProvider } from './context/KeyContext';
 import { DemoWorkspaceProvider } from './context/DemoWorkspaceContext';
@@ -28,7 +27,7 @@ import { Chat } from './pages/Chat';
 
 function AppLayout() {
   const auth = useAuth() || {};
-  const { user = null, signOut = async () => {} } = auth;
+  const { user = null } = auth;
   const location = useLocation();
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
@@ -131,24 +130,12 @@ function AppLayout() {
         </Routes>
       </main>
 
-      {/* Logout Option on the very bottom of the app */}
       {user && !isStandaloneView && (
-        <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400 font-mono">
+        <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/[0.06] flex items-center justify-center text-xs text-slate-500 font-mono">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
             <span>ExpenseTracker AI • Sovereign Ledger</span>
           </div>
-          <button
-            onClick={async () => {
-              await signOut();
-              window.location.href = '/login';
-            }}
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl apple-glass-pill text-slate-400 hover:text-rose-300 hover:border-rose-500/30 transition text-xs font-mono"
-            title="Sign out of ExpenseTracker"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
         </footer>
       )}
 

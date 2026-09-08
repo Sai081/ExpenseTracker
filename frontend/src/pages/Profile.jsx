@@ -20,6 +20,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useBYOK } from '../context/KeyContext';
 import { api } from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 export function Profile() {
   const auth = useAuth() || {};
@@ -72,16 +73,54 @@ export function Profile() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setProfileError('Image size should be less than 2MB.');
-      return;
-    }
-
     const reader = new FileReader();
-    reader.onload = () => {
-      setAvatarUrl(reader.result);
-      setProfileError('');
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const size = 256;
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          setAvatarUrl(event.target.result);
+          setProfileError('');
+          return;
+        }
+
+        const minDim = Math.min(img.width, img.height);
+        const startX = (img.width - minDim) / 2;
+        const startY = (img.height - minDim) / 2;
+
+        ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
+
+        const base64DataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+        try {
+          if (supabase) {
+            const { error } = await supabase.auth.updateUser({
+              data: { avatar_url: base64DataUrl }
+            });
+
+            if (error) throw error;
+          }
+
+          setAvatarUrl(base64DataUrl);
+          setProfileError('');
+        } catch (err) {
+          console.error('Failed to update avatar:', err);
+          setProfileError('Failed to save profile picture: ' + (err.message || 'Unknown error'));
+        }
+      };
+
+      img.onerror = () => {
+        setProfileError('Unable to process this image file. Please try another image.');
+      };
+
+      img.src = event.target.result;
     };
+
     reader.readAsDataURL(file);
   };
 

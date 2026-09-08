@@ -296,73 +296,76 @@ export function Transactions() {
               return (
                 <div
                   key={txn.id}
-                  className="py-4 flex items-center justify-between group hover:bg-white/[0.02] px-3 rounded-2xl transition"
+                  className="py-4 px-3 rounded-2xl transition group hover:bg-white/[0.02] min-w-0"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <div
-                      className={`p-2.5 rounded-xl border ${
-                        isExpense
-                          ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
-                          : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                      }`}
-                    >
-                      {isExpense ? (
-                        <ArrowUpRight className="w-4 h-4" />
-                      ) : (
-                        <ArrowDownLeft className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-white leading-snug">
-                        {txn.description || txn.category || 'Transaction'}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 font-mono text-[11px]">
-                        <span>{txn.date}</span>
-                        <span>•</span>
-                        <span className="px-1.5 py-0.5 rounded bg-white/[0.04] text-slate-300">
-                          {txn.category || 'Uncategorized'}
-                        </span>
-                        {txn.payment_method && (
-                          <>
-                            <span>•</span>
-                            <span className="capitalize text-violet-300">{txn.payment_method}</span>
-                          </>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 min-w-0">
+                    <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                          isExpense
+                            ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                            : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                        }`}
+                      >
+                        {isExpense ? (
+                          <ArrowUpRight className="w-4 h-4" />
+                        ) : (
+                          <ArrowDownLeft className="w-4 h-4" />
                         )}
                       </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-bold text-white truncate leading-snug">
+                          {txn.description || txn.category || 'Transaction'}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400 font-mono mt-0.5">
+                          <span>{txn.date}</span>
+                          <span>•</span>
+                          <span className="px-1.5 py-0.5 rounded bg-white/[0.05] text-slate-300 truncate max-w-[120px]">
+                            {txn.category || 'Uncategorized'}
+                          </span>
+                          {txn.payment_method && (
+                            <>
+                              <span>•</span>
+                              <span className="text-slate-400 capitalize">{txn.payment_method}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <p
-                      className={`text-base font-extrabold font-mono ${
-                        isExpense ? 'text-rose-400' : 'text-emerald-400'
-                      }`}
-                    >
-                      {isExpense ? '-' : '+'}{currency.symbol}{txn.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </p>
+                    <div className="self-end sm:self-center shrink-0 text-right pl-2">
+                      <p
+                        className={`font-mono text-xs sm:text-sm font-bold ${
+                          isExpense ? 'text-rose-400' : 'text-emerald-400'
+                        }`}
+                      >
+                        {isExpense ? '-' : '+'}{currency.symbol}{txn.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
 
-                    {/* Edit Option Beside Delete Option */}
-                    <button
-                      onClick={() => handleOpenEdit(txn)}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-cyan-400 hover:bg-white/5 rounded-xl transition magnetic-btn"
-                      title="Edit ledger record"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                      <div className="flex items-center justify-end gap-1.5 mt-2 sm:mt-1">
+                        <button
+                          onClick={() => handleOpenEdit(txn)}
+                          className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-cyan-400 hover:bg-white/5 rounded-xl transition magnetic-btn"
+                          title="Edit ledger record"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
 
-                    {/* Delete Option */}
-                    <button
-                      onClick={() => handleDelete(txn.id)}
-                      disabled={deletingId === txn.id}
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-rose-400 hover:bg-white/5 rounded-xl transition magnetic-btn"
-                      title="Delete ledger record"
-                    >
-                      {deletingId === txn.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
-                    </button>
+                        <button
+                          onClick={() => handleDelete(txn.id)}
+                          disabled={deletingId === txn.id}
+                          className="opacity-0 group-hover:opacity-100 p-2 text-slate-500 hover:text-rose-400 hover:bg-white/5 rounded-xl transition magnetic-btn"
+                          title="Delete ledger record"
+                        >
+                          {deletingId === txn.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-rose-400" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );

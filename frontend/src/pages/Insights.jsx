@@ -411,58 +411,62 @@ export function Insights() {
 
             {/* Interactive Bar Chart */}
             <div className="pt-4 pb-2">
-              <div className="h-64 flex items-end gap-2 sm:gap-4 justify-between pt-6 px-2 border-b border-white/[0.06]">
-                {yearlyTrend.map((m, idx) => {
-                  const expenseHeight = maxChartVal > 0 ? (m.expense / maxChartVal) * 100 : 0;
-                  const savingsHeight = maxChartVal > 0 ? (Math.max(0, m.savings) / maxChartVal) * 100 : 0;
-                  const isCurrentSelection = m.month === selectedMonth;
+              <div className="w-full overflow-x-auto pb-2 scroll-smooth no-scrollbar">
+                <div className="min-w-[480px]">
+                  <div className="h-64 flex items-end gap-2 sm:gap-4 justify-between pt-6 px-2 border-b border-white/[0.06]">
+                    {yearlyTrend.map((m, idx) => {
+                      const expenseHeight = maxChartVal > 0 ? (m.expense / maxChartVal) * 100 : 0;
+                      const savingsHeight = maxChartVal > 0 ? (Math.max(0, m.savings) / maxChartVal) * 100 : 0;
+                      const isCurrentSelection = m.month === selectedMonth;
 
-                  return (
-                    <div 
-                      key={idx} 
-                      onClick={() => setSelectedMonth(m.month)}
-                      className={`flex-1 flex flex-col items-center h-full justify-end group cursor-pointer p-1 rounded-xl transition ${
-                        isCurrentSelection ? 'bg-violet-500/10 ring-1 ring-violet-500/40' : 'hover:bg-white/[0.02]'
-                      }`}
-                      title={`${m.label}: Inflow ${currency.symbol}${m.income.toLocaleString()} | Outflow ${currency.symbol}${m.expense.toLocaleString()} | Savings ${currency.symbol}${m.savings.toLocaleString()}`}
-                    >
-                      <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-48">
-                        {/* Expense Bar */}
-                        {(yearlyViewFilter === 'all' || yearlyViewFilter === 'expenses') && (
-                          <div 
-                            className="w-full max-w-[12px] bg-gradient-to-t from-rose-600 to-rose-400 rounded-t-sm transition-all duration-500 group-hover:brightness-125"
-                            style={{ height: `${Math.max(6, expenseHeight)}%` }}
-                          />
-                        )}
+                      return (
+                        <div 
+                          key={idx} 
+                          onClick={() => setSelectedMonth(m.month)}
+                          className={`flex-1 flex flex-col items-center h-full justify-end group cursor-pointer p-1 rounded-xl transition ${
+                            isCurrentSelection ? 'bg-violet-500/10 ring-1 ring-violet-500/40' : 'hover:bg-white/[0.02]'
+                          }`}
+                          title={`${m.label}: Inflow ${currency.symbol}${m.income.toLocaleString()} | Outflow ${currency.symbol}${m.expense.toLocaleString()} | Savings ${currency.symbol}${m.savings.toLocaleString()}`}
+                        >
+                          <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 h-48">
+                            {/* Expense Bar */}
+                            {(yearlyViewFilter === 'all' || yearlyViewFilter === 'expenses') && (
+                              <div 
+                                className="w-full max-w-[12px] bg-gradient-to-t from-rose-600 to-rose-400 rounded-t-sm transition-all duration-500 group-hover:brightness-125"
+                                style={{ height: `${Math.max(6, expenseHeight)}%` }}
+                              />
+                            )}
 
-                        {/* Savings Bar */}
-                        {(yearlyViewFilter === 'all' || yearlyViewFilter === 'savings') && (
-                          <div 
-                            className="w-full max-w-[12px] bg-gradient-to-t from-violet-600 via-purple-500 to-fuchsia-400 rounded-t-sm transition-all duration-500 group-hover:brightness-125 shadow-[0_0_8px_rgba(139,92,246,0.3)]"
-                            style={{ height: `${Math.max(6, savingsHeight)}%` }}
-                          />
-                        )}
-                      </div>
+                            {/* Savings Bar */}
+                            {(yearlyViewFilter === 'all' || yearlyViewFilter === 'savings') && (
+                              <div 
+                                className="w-full max-w-[12px] bg-gradient-to-t from-violet-600 via-purple-500 to-fuchsia-400 rounded-t-sm transition-all duration-500 group-hover:brightness-125 shadow-[0_0_8px_rgba(139,92,246,0.3)]"
+                                style={{ height: `${Math.max(6, savingsHeight)}%` }}
+                              />
+                            )}
+                          </div>
 
-                      <span className={`text-[10px] mt-2 font-mono ${
-                        isCurrentSelection ? 'text-violet-400 font-bold' : 'text-slate-500 group-hover:text-slate-300'
-                      }`}>
-                        {m.label.split(' ')[0]}
-                      </span>
+                          <span className={`text-[10px] mt-2 font-mono ${
+                            isCurrentSelection ? 'text-violet-400 font-bold' : 'text-slate-500 group-hover:text-slate-300'
+                          }`}>
+                            {m.label.split(' ')[0]}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Chart Legend */}
+                  <div className="flex items-center justify-center gap-6 mt-4 text-xs text-slate-400 font-mono">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-violet-600 to-fuchsia-400" />
+                      <span>Retained Wealth (Electric Violet)</span>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Chart Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4 text-xs text-slate-400 font-mono">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-gradient-to-tr from-violet-600 to-fuchsia-400" />
-                  <span>Retained Wealth (Electric Violet)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
-                  <span>Burn Outflows (Crimson)</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-sm bg-rose-500" />
+                      <span>Burn Outflows (Crimson)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
