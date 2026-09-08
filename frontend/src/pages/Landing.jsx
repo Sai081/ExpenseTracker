@@ -511,22 +511,27 @@ export function Landing() {
                   </div>
                   <div className="flex items-center justify-between mb-1.5">
                     <h3 className="font-display font-bold text-base text-white">Android App</h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">TWA / APK</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300">1-Tap Install</span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    Trusted Web Activity project with Digital Asset Links and Android Studio build files.
+                    Installs directly to your Android device with zero browser chrome, offline support, and full screen immersion.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-neutral-500">7 KB .zip</span>
-                  <a
-                    href="/downloads/ExpenseTracker-Android-TWA.zip"
-                    download
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-teal-500/20 text-white hover:text-teal-200 border border-white/10 hover:border-teal-400/30 text-xs font-semibold transition cursor-pointer"
+                  <span className="text-[11px] font-mono text-neutral-500">Android PWA</span>
+                  <button
+                    onClick={() => {
+                      if (window.__pwa_deferred_prompt) {
+                        window.__pwa_deferred_prompt.prompt();
+                      } else {
+                        alert("To install ExpenseTracker on Android:\n\n1. In your Android browser (Chrome or Samsung Internet), tap the three dots (⋮) in the top right menu.\n2. Select 'Install app' or 'Add to Home screen'.\n\nThe app will install directly without any zip files!");
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download</span>
-                  </a>
+                    <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Install App</span>
+                  </button>
                 </div>
               </div>
 

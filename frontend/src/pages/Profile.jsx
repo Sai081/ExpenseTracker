@@ -4,29 +4,29 @@ import {
   Mail, 
   ShieldCheck, 
   KeyRound, 
-  Upload, 
   Check, 
   AlertCircle, 
   Loader2, 
-  Camera,
   Lock,
   ExternalLink,
   Trash2,
   Cpu,
   Database,
   AlertTriangle,
-  LogOut
+  LogOut,
+  Coins
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBYOK } from '../context/KeyContext';
+import { useCurrency } from '../context/CurrencyContext';
 import { api } from '../lib/api';
-import { supabase } from '../lib/supabase';
 
 export function Profile() {
   const auth = useAuth() || {};
   const { user = null, updateLocalUser = () => {}, signOut = async () => {} } = auth;
   const byok = useBYOK() || {};
   const { groqKey = '', saveKey = () => {}, clearKey = () => {}, hasKey = false } = byok;
+  const { currencyCode, setCurrency, currencies } = useCurrency();
 
   // Delete Account State
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -35,7 +35,7 @@ export function Profile() {
 
   // Profile Edit State
   const [username, setUsername] = useState(user?.username || '');
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
+  const [selectedCurrency, setSelectedCurrency] = useState(currencyCode || 'INR');
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState('');
   const [profileError, setProfileError] = useState('');
@@ -52,79 +52,26 @@ export function Profile() {
   const [inputKey, setInputKey] = useState(groqKey || '');
   const [keySuccess, setKeySuccess] = useState(false);
 
+  // Google Avatar
+  const googleAvatar = user?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+
   useEffect(() => {
     if (user) {
       setUsername(user.username || '');
-      setAvatarUrl(user.avatar_url || '');
     }
   }, [user]);
+
+  useEffect(() => {
+    if (currencyCode) {
+      setSelectedCurrency(currencyCode);
+    }
+  }, [currencyCode]);
 
   useEffect(() => {
     setInputKey(groqKey || '');
   }, [groqKey]);
 
-  // Handle avatar file upload
-  const handleAvatarFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setProfileError('Please choose a valid image file (PNG, JPEG, WebP).');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        const size = 256;
-        canvas.width = size;
-        canvas.height = size;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          setAvatarUrl(event.target.result);
-          setProfileError('');
-          return;
-        }
-
-        const minDim = Math.min(img.width, img.height);
-        const startX = (img.width - minDim) / 2;
-        const startY = (img.height - minDim) / 2;
-
-        ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, size, size);
-
-        const base64DataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-        try {
-          if (supabase) {
-            const { error } = await supabase.auth.updateUser({
-              data: { avatar_url: base64DataUrl }
-            });
-
-            if (error) throw error;
-          }
-
-          setAvatarUrl(base64DataUrl);
-          setProfileError('');
-        } catch (err) {
-          console.error('Failed to update avatar:', err);
-          setProfileError('Failed to save profile picture: ' + (err.message || 'Unknown error'));
-        }
-      };
-
-      img.onerror = () => {
-        setProfileError('Unable to process this image file. Please try another image.');
-      };
-
-      img.src = event.target.result;
-    };
-
-    reader.readAsDataURL(file);
-  };
-
-  // Save profile changes (Username & Avatar)
+  // Save profile changes (Username & Permanent Currency)
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setProfileLoading(true);
@@ -132,18 +79,26 @@ export function Profile() {
     setProfileError('');
 
     try {
+      // Save permanent preferred currency
+      setCurrency(selectedCurrency);
+
       const updated = await api.updateProfile({
         username: username.trim(),
-        avatar_url: avatarUrl
+        avatar_url: googleAvatar,
+        currency: selectedCurrency
       });
+
       if (updated) {
-        if (updated.avatar_url) setAvatarUrl(updated.avatar_url);
         if (updateLocalUser) updateLocalUser(updated);
       }
-      setProfileSuccess('Profile picture and details updated successfully!');
+
+      setProfileSuccess(`Profile and default currency (${selectedCurrency}) updated permanently!`);
       setTimeout(() => setProfileSuccess(''), 4000);
     } catch (err) {
-      setProfileError(err.message || 'Failed to update profile.');
+      // Even if remote update fails, local currency preference is saved
+      setCurrency(selectedCurrency);
+      setProfileSuccess(`Default currency updated to ${selectedCurrency}!`);
+      setTimeout(() => setProfileSuccess(''), 4000);
     } finally {
       setProfileLoading(false);
     }
@@ -219,15 +174,15 @@ export function Profile() {
           Account & Sovereign Security
         </h1>
         <p className="text-xs sm:text-sm text-slate-400 mt-1 font-mono">
-          Manage your telemetry profile, avatar, credentials, and client-side Groq LLaMA keys
+          Manage your permanent currency, Google account profile, credentials, and client-side Groq LLaMA keys
         </p>
       </div>
 
-      {/* Personal Info & Avatar Card */}
+      {/* Personal Info & Currency Card */}
       <div className="p-6 sm:p-8 rounded-3xl apple-glass-card border border-white/[0.08] shadow-xl relative overflow-hidden space-y-6">
         <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
           <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <span>Identity Parameters</span>
+            <span>Identity & Currency Parameters</span>
           </h2>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/[0.04] text-slate-400">
             PostgreSQL User #{user?.id || '1'}
@@ -250,46 +205,31 @@ export function Profile() {
 
         <form onSubmit={handleSaveProfile} className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-6">
-            {/* Avatar Preview */}
-            <div className="relative group w-24 h-24 sm:w-28 sm:h-28 shrink-0">
-              {avatarUrl ? (
+            {/* Google Profile Avatar */}
+            <div className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0">
+              {googleAvatar ? (
                 <img
-                  src={avatarUrl}
-                  alt={username || 'Profile'}
+                  src={googleAvatar}
+                  alt={username || 'Google Profile'}
                   className="w-full h-full rounded-3xl object-cover border-2 border-violet-500/40 shadow-xl"
+                  referrerPolicy="no-referrer"
                 />
               ) : (
                 <div className="w-full h-full rounded-3xl bg-black/60 border-2 border-violet-500/30 flex items-center justify-center text-3xl font-extrabold text-violet-400 shadow-xl font-mono">
                   {username ? username.charAt(0).toUpperCase() : 'U'}
                 </div>
               )}
-
-              <label 
-                htmlFor="avatar-upload"
-                className="absolute inset-0 rounded-3xl bg-black/70 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center cursor-pointer text-white text-xs gap-1 backdrop-blur-xs font-semibold"
-              >
-                <Camera className="w-5 h-5" />
-                <span>Upload</span>
-              </label>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarFileChange}
-                className="hidden"
-              />
             </div>
 
-            <div className="space-y-2 flex-1">
-              <label 
-                htmlFor="avatar-upload"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl apple-glass-pill text-xs font-semibold text-white cursor-pointer hover:border-violet-500/40 transition shadow-sm magnetic-btn"
-              >
-                <Upload className="w-3.5 h-3.5 text-violet-400" />
-                <span>Upload Device Image</span>
-              </label>
-              <p className="text-xs text-slate-400 font-mono">
-                Click preview or button to upload your picture (PNG, JPG, WebP max 2MB).
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-white">Google Profile Picture</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
+                  Google Synced
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-mono leading-relaxed">
+                Your profile picture is securely linked and synced from your authenticated Google profile.
               </p>
             </div>
           </div>
@@ -317,6 +257,28 @@ export function Profile() {
                 <span className="truncate">{user?.email || 'N/A'}</span>
               </div>
             </div>
+          </div>
+
+          {/* Permanent Currency Preference */}
+          <div className="pt-2 border-t border-white/[0.08]">
+            <label className="block text-xs font-mono uppercase text-cyan-300 font-bold mb-1.5 flex items-center gap-1.5">
+              <Coins className="w-3.5 h-3.5" />
+              <span>Permanent Base Currency</span>
+            </label>
+            <select
+              value={selectedCurrency}
+              onChange={(e) => setSelectedCurrency(e.target.value)}
+              className="w-full sm:w-80 px-4 py-2.5 rounded-2xl glass-input text-white text-sm focus:outline-none focus:border-cyan-400 transition font-mono bg-[#071312] cursor-pointer"
+            >
+              {currencies.map((c) => (
+                <option key={c.code} value={c.code} className="bg-[#0b1d1a] text-white">
+                  {c.symbol} {c.code} — {c.name}
+                </option>
+              ))}
+            </select>
+            <p className="text-[11px] text-slate-400 font-mono mt-1.5">
+              This sets your permanent default currency for all budgets, analytics, and transaction logs.
+            </p>
           </div>
 
           <div className="flex justify-end pt-2">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Smartphone, Sparkles } from 'lucide-react';
+import { Download, X, Smartphone } from 'lucide-react';
 
 export function PWAInstallBanner() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -25,6 +25,7 @@ export function PWAInstallBanner() {
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      window.__pwa_deferred_prompt = e;
       setIsVisible(true);
     };
 
@@ -36,11 +37,13 @@ export function PWAInstallBanner() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    const promptEvent = deferredPrompt || window.__pwa_deferred_prompt;
+    if (!promptEvent) return;
+    promptEvent.prompt();
+    const { outcome } = await promptEvent.userChoice;
     console.log('[PWA] User choice:', outcome);
     setDeferredPrompt(null);
+    window.__pwa_deferred_prompt = null;
     setIsVisible(false);
   };
 
@@ -89,3 +92,5 @@ export function PWAInstallBanner() {
     </div>
   );
 }
+
+export default PWAInstallBanner;

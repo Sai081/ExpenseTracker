@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  History,
-  PieChart,
-  Sparkles,
+  History, 
+  PieChart, 
+  Sparkles, 
   BookOpen, 
-  Plus,
-  User
+  Plus 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useCurrency } from '../context/CurrencyContext';
 
 // Brand Logo Component with Telemetry Glow
 export function BrandLogo({ className = "w-7 h-7" }) {
@@ -40,7 +38,6 @@ export function BrandLogo({ className = "w-7 h-7" }) {
 export function Navbar({ onOpenAddModal }) {
   const auth = useAuth() || {};
   const { user = null } = auth;
-  const { currencyCode, setCurrency, currencies } = useCurrency();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -86,13 +83,15 @@ export function Navbar({ onOpenAddModal }) {
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-lg text-white tracking-tight font-display">
-              Expense<span className="text-slate-400">Tracker</span>
+                  Expense<span className="text-slate-400">Tracker</span>
                 </span>
                 <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-cyan-500/10 text-cyan-200 border border-cyan-400/25 uppercase tracking-widest font-mono">
                   AI
                 </span>
               </div>
-              <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase hidden sm:block">Personal finance, made clear</span>
+              <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase hidden sm:block">
+                Personal finance, made clear
+              </span>
             </div>
           </NavLink>
 
@@ -126,24 +125,8 @@ export function Navbar({ onOpenAddModal }) {
           </nav>
         </div>
 
-        {/* Right Actions: Currency, Add, Profile & Sign Out */}
+        {/* Right Actions: Add Transaction & User Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Currency Switcher */}
-          <div className="relative">
-            <select
-              value={currencyCode}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="px-2.5 py-1 rounded-full apple-glass-pill text-xs font-mono font-bold text-emerald-300 hover:text-white border border-white/10 hover:border-emerald-500/30 bg-[#071312]/80 focus:outline-none cursor-pointer transition shadow-sm"
-              title="Change Display Currency"
-            >
-              {currencies.map((c) => (
-                <option key={c.code} value={c.code} className="bg-[#0b1d1a] text-white font-sans">
-                  {c.symbol} {c.code}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Quick Add Action */}
           <button
             onClick={onOpenAddModal}
@@ -155,7 +138,7 @@ export function Navbar({ onOpenAddModal }) {
 
           {/* User Profile Avatar Link */}
           {user && (
-            <div className="flex items-center gap-2 pl-2 border-l border-white/10">
+            <div className="flex items-center gap-2 pl-1 sm:pl-2 sm:border-l sm:border-white/10">
               <NavLink
                 to="/profile"
                 className={({ isActive }) =>
@@ -172,19 +155,20 @@ export function Navbar({ onOpenAddModal }) {
                     src={user.avatar_url}
                     alt={user.username || 'User'}
                     className="w-8 h-8 rounded-full border border-white/15 object-cover shadow-sm"
+                    referrerPolicy="no-referrer"
                   />
                 ) : (
-                    <div className="w-8 h-8 rounded-full bg-white/[0.12] border border-white/15 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                  <div className="w-8 h-8 rounded-full bg-white/[0.12] border border-white/15 text-white flex items-center justify-center font-bold text-xs shadow-sm">
                     {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
                   </div>
                 )}
               </NavLink>
-
             </div>
           )}
         </div>
       </div>
 
+      {/* Mobile Sub-Navigation Bar: smooth horizontal scroll without truncating labels */}
       <nav className="md:hidden flex items-center gap-1.5 px-3 pb-2.5 pt-1.5 border-t border-white/[0.06] overflow-x-auto no-scrollbar scroll-smooth" aria-label="Primary navigation">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -210,3 +194,5 @@ export function Navbar({ onOpenAddModal }) {
     </header>
   );
 }
+
+export default Navbar;
