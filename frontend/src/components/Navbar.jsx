@@ -58,118 +58,123 @@ export function Navbar({ onOpenAddModal }) {
   ];
 
   return (
-    <header
-      className={`navbar fixed top-0 left-0 right-0 z-[1000] isolate w-full apple-glass transition-all duration-300 ${
-        isScrolled
-          ? 'border-b border-white/[0.08] shadow-[0_12px_36px_-10px_rgba(0,0,0,0.7)]'
-          : 'border-b border-white/[0.06]'
-      }`}
-    >
-      {/* Top Hairline Accent Line (telemetry neon glow effect) */}
-      <div className="absolute inset-x-0 top-0 h-px bg-white/10 pointer-events-none" />
-      <div
-        className={`absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent pointer-events-none transition-opacity duration-500 ${
-          isScrolled ? 'opacity-100' : 'opacity-0'
+    <>
+      {/* Top App Bar Header */}
+      <header
+        className={`navbar fixed top-0 left-0 right-0 z-[1000] isolate w-full apple-glass transition-all duration-300 ${
+          isScrolled
+            ? 'border-b border-white/[0.08] shadow-[0_12px_36px_-10px_rgba(0,0,0,0.7)]'
+            : 'border-b border-white/[0.06]'
         }`}
-      />
+      >
+        <div className="absolute inset-x-0 top-0 h-px bg-white/10 pointer-events-none" />
+        <div
+          className={`absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent pointer-events-none transition-opacity duration-500 ${
+            isScrolled ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
-        {/* Brand & Badge */}
-        <div className="flex items-center gap-6">
-          <NavLink to={user ? "/dashboard" : "/"} className="flex items-center gap-3 group">
-            <div className="relative p-1 rounded-2xl bg-white/[0.03] border border-white/[0.1] shadow-lg group-hover:scale-105 transition-transform duration-300">
-              <BrandLogo className="w-8 h-8" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-lg text-white tracking-tight font-display">
-                  Expense<span className="text-slate-400">Tracker</span>
-                </span>
-                <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-cyan-500/10 text-cyan-200 border border-cyan-400/25 uppercase tracking-widest font-mono">
-                  AI
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-18 flex items-center justify-between">
+          {/* Brand Logo & Title */}
+          <div className="flex items-center gap-6">
+            <NavLink to={user ? "/dashboard" : "/"} className="flex items-center gap-2.5 sm:gap-3 group">
+              <div className="relative p-1 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/[0.1] shadow-lg group-hover:scale-105 transition-transform duration-300">
+                <BrandLogo className="w-7 h-7 sm:w-8 sm:h-8" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-extrabold text-base sm:text-lg text-white tracking-tight font-display">
+                    Expense<span className="text-slate-400">Tracker</span>
+                  </span>
+                  <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-md bg-cyan-500/10 text-cyan-200 border border-cyan-400/25 uppercase tracking-widest font-mono">
+                    AI
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase hidden sm:block">
+                  Personal finance, made clear
                 </span>
               </div>
-              <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase hidden sm:block">
-                Personal finance, made clear
-              </span>
-            </div>
-          </NavLink>
+            </NavLink>
 
-          {/* Navigation Pill Container */}
-          <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
-            {navItems.map((item) => {
-              return (
+            {/* Desktop Navigation Tabs (Hidden on mobile) */}
+            <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
+              {navItems.map((item) => {
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === '/dashboard'}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 ${
+                        isActive
+                          ? 'bg-white/[0.09] text-white border border-white/15 shadow-inner'
+                          : 'text-slate-400 hover:text-white hover:bg-white/[0.05] border border-transparent'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <span>{item.label}</span>
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Right Actions: Quick Add & User Avatar */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Quick Add Action */}
+            <button
+              onClick={onOpenAddModal}
+              className="p-2 rounded-full apple-glass-pill text-slate-300 hover:text-white hover:border-white/25 transition-all magnetic-btn"
+              title="Add Transaction Manually"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+            </button>
+
+            {/* User Profile Avatar Link */}
+            {user && (
+              <div className="flex items-center pl-1 sm:pl-2 sm:border-l sm:border-white/10">
                 <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/dashboard'}
+                  to="/profile"
                   className={({ isActive }) =>
-                    `flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 ${
-                      isActive
-                        ? 'bg-white/[0.09] text-white border border-white/15 shadow-inner'
-                        : 'text-slate-400 hover:text-white hover:bg-white/[0.05] border border-transparent'
+                    `flex items-center p-1 sm:p-1.5 rounded-full transition-all ${
+                      isActive 
+                        ? 'bg-white/[0.09] text-white border border-white/15 shadow-sm' 
+                        : 'text-slate-300 hover:text-white hover:bg-white/[0.05] border border-transparent'
                     }`
                   }
+                  title="View Profile & Settings"
                 >
-                  {({ isActive }) => (
-                    <>
-                      <span>{item.label}</span>
-                      {isActive && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-white/70" />
-                      )}
-                    </>
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.username || 'User'}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/15 object-cover shadow-sm"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/[0.12] border border-white/15 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                      {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
+                    </div>
                   )}
                 </NavLink>
-              );
-            })}
-          </nav>
+              </div>
+            )}
+          </div>
         </div>
+      </header>
 
-        {/* Right Actions: Add Transaction & User Profile */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Quick Add Action */}
-          <button
-            onClick={onOpenAddModal}
-            className="p-2 rounded-full apple-glass-pill text-slate-300 hover:text-white hover:border-white/25 transition-all magnetic-btn"
-            title="Add Transaction Manually"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-          </button>
-
-          {/* User Profile Avatar Link */}
-          {user && (
-            <div className="flex items-center gap-2 pl-1 sm:pl-2 sm:border-l sm:border-white/10">
-              <NavLink
-                to="/profile"
-                className={({ isActive }) =>
-                  `flex items-center gap-2 p-1.5 rounded-full transition-all ${
-                    isActive 
-                      ? 'bg-white/[0.09] text-white border border-white/15 shadow-sm' 
-                      : 'text-slate-300 hover:text-white hover:bg-white/[0.05] border border-transparent'
-                  }`
-                }
-                title="View Profile & Settings"
-              >
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.username || 'User'}
-                    className="w-8 h-8 rounded-full border border-white/15 object-cover shadow-sm"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-white/[0.12] border border-white/15 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                    {user.username ? user.username.charAt(0).toUpperCase() : 'U'}
-                  </div>
-                )}
-              </NavLink>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Mobile Sub-Navigation Bar: smooth horizontal scroll without truncating labels */}
-      <nav className="md:hidden flex items-center gap-1.5 px-3 pb-2.5 pt-1.5 border-t border-white/[0.06] overflow-x-auto no-scrollbar scroll-smooth" aria-label="Primary navigation">
+      {/* Native Mobile Bottom Navigation Bar (Android & iOS Navigation Style) */}
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[1000] bg-[#071312]/95 backdrop-blur-2xl border-t border-white/[0.08] px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] flex items-center justify-around shadow-[0_-10px_30px_rgba(0,0,0,0.6)]" 
+        aria-label="Mobile Bottom navigation"
+      >
         {navItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -178,20 +183,28 @@ export function Navbar({ onOpenAddModal }) {
               to={item.to}
               end={item.to === '/dashboard'}
               className={({ isActive }) =>
-                `flex shrink-0 items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                `flex flex-col items-center justify-center min-w-[56px] py-1 text-center transition-all ${
                   isActive
-                    ? 'bg-cyan-500/15 text-cyan-200 border border-cyan-400/30 shadow-sm'
-                    : 'text-slate-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
+                    ? 'text-cyan-300'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`
               }
             >
-              <Icon className="w-3.5 h-3.5" />
-              <span>{item.label}</span>
+              {({ isActive }) => (
+                <>
+                  <div className={`p-1 rounded-xl transition-all ${isActive ? 'bg-cyan-500/15 text-cyan-300 shadow-sm scale-105' : ''}`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className={`text-[10px] font-medium tracking-tight mt-0.5 ${isActive ? 'font-bold text-cyan-200' : 'text-slate-400'}`}>
+                    {item.label}
+                  </span>
+                </>
+              )}
             </NavLink>
           );
         })}
       </nav>
-    </header>
+    </>
   );
 }
 

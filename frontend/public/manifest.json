@@ -4,10 +4,15 @@
   "short_name": "ExpenseTracker",
   "description": "Know where your money goes. A clearer, calmer way to understand your everyday money with AI-driven insights.",
   "id": "/?source=pwa",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
+  "display_override": [
+    "standalone",
+    "minimal-ui",
+    "window-controls-overlay"
+  ],
+  "orientation": "portrait-primary",
   "background_color": "#071312",
   "theme_color": "#071312",
   "lang": "en",
