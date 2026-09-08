@@ -248,7 +248,7 @@ export function AssistantWidget({ onTransactionCreated }) {
     <>
       {/* 1-Minute Pop-up Speech Bubble & Floating Launcher Button */}
       {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 group font-sans">
+        <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] sm:bottom-6 right-4 sm:right-6 z-[1001] group font-sans">
           {/* Floating 1-minute Reminder Speech Bubble */}
           {showReminderBubble && (
             <div className="absolute bottom-16 right-0 w-72 sm:w-80 p-3.5 apple-glass-card rounded-2xl shadow-2xl animate-fade-in text-xs text-slate-200 z-50 border border-emerald-500/30 bg-[#071312]/95 backdrop-blur-2xl">
@@ -312,7 +312,7 @@ export function AssistantWidget({ onTransactionCreated }) {
       {/* Floating Assistant Window (Compact view only - enlarged view removed) */}
       {isOpen && (
         <div 
-          className="fixed z-50 bottom-6 right-6 w-[94vw] sm:w-[420px] h-[580px] max-h-[85vh] rounded-3xl flex flex-col apple-glass-card shadow-2xl backdrop-blur-2xl overflow-hidden font-sans border border-white/10 bg-[#071312]/95"
+          className="fixed z-[1002] bottom-[calc(4.75rem+env(safe-area-inset-bottom))] sm:bottom-6 right-3 sm:right-6 w-[94vw] sm:w-[420px] h-[580px] max-h-[85vh] rounded-3xl flex flex-col apple-glass-card shadow-2xl backdrop-blur-2xl overflow-hidden font-sans border border-white/10 bg-[#071312]/95"
         >
           {/* Ambient backdrop */}
           <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
