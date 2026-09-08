@@ -457,22 +457,27 @@ export function Landing() {
                   </div>
                   <div className="flex items-center justify-between mb-1.5">
                     <h3 className="font-display font-bold text-base text-white">macOS App</h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">macOS</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">1-Tap Install</span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    Double-clickable standalone desktop app bundle with native macOS Dock telemetry icon.
+                    Installs directly to your Mac Dock and Launchpad with native standalone window and keyboard shortcuts.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-neutral-500">12 KB .zip</span>
-                  <a
-                    href="/downloads/ExpenseTracker-macOS.zip"
-                    download
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-cyan-500/20 text-white hover:text-cyan-200 border border-white/10 hover:border-cyan-400/30 text-xs font-semibold transition cursor-pointer"
+                  <span className="text-[11px] font-mono text-neutral-500">Mac App</span>
+                  <button
+                    onClick={() => {
+                      if (window.__pwa_deferred_prompt) {
+                        window.__pwa_deferred_prompt.prompt();
+                      } else {
+                        alert("To install ExpenseTracker on Mac:\n\n1. In Chrome, Edge, or Brave: Click the 'Install App' icon (⊕) in the address bar.\n   OR\n2. In Safari (macOS Sonoma+): Click File > Add to Dock.\n\nExpenseTracker will launch directly from your Mac Dock and Launchpad!");
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download</span>
-                  </a>
+                    <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Install App</span>
+                  </button>
                 </div>
               </div>
 
@@ -540,30 +545,31 @@ export function Landing() {
                 </div>
               </div>
 
-              {/* Universal Bundle */}
-              <div className="landing-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between group border-cyan-400/20">
+              {/* iPhone & iPad (iOS) */}
+              <div className="landing-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between group border-violet-400/20">
                 <div>
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-emerald-500/20 border border-cyan-400/30 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
-                    <Package className="w-6 h-6 text-cyan-200" />
+                  <div className="w-12 h-12 rounded-2xl bg-violet-500/10 border border-violet-400/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <Smartphone className="w-6 h-6 text-violet-300" />
                   </div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="font-display font-bold text-base text-white">Universal Bundle</h3>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-200">All Platforms</span>
+                    <h3 className="font-display font-bold text-base text-white">iPhone & iPad</h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300">iOS / Safari</span>
                   </div>
                   <p className="text-xs text-neutral-400 leading-relaxed">
-                    Complete multi-platform distribution containing macOS app, Windows MSIX, Android TWA, and iOS wrapper.
+                    Add directly to your iOS home screen from Safari. Launches full screen with offline support and zero browser bars.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-neutral-500">41 KB .zip</span>
-                  <a
-                    href="/downloads/ExpenseTracker-Installable-Packages.zip"
-                    download
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
+                  <span className="text-[11px] font-mono text-neutral-500">iOS PWA</span>
+                  <button
+                    onClick={() => {
+                      alert("To install ExpenseTracker on iPhone or iPad:\n\n1. Open ExpenseTracker in Safari.\n2. Tap the Share button (the square with an arrow pointing up at the bottom of Safari).\n3. Scroll down and tap 'Add to Home Screen'.\n4. Tap 'Add' in the top right.\n\nExpenseTracker will appear right on your iPhone home screen as a standalone app!");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-400 hover:to-purple-400 text-white font-bold text-xs shadow-md transition cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Download All</span>
-                  </a>
+                    <span>Install Guide</span>
+                  </button>
                 </div>
               </div>
             </div>
