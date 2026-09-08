@@ -37,7 +37,7 @@ function AppLayout() {
     setRefreshKey((k) => k + 1);
   };
 
-  const isPublicPage = (!user && location.pathname === '/') || location.pathname === '/login' || location.pathname === '/landing' || location.pathname === '/docs';
+  const isPublicPage = (!user && location.pathname === '/') || location.pathname === '/landing' || location.pathname === '/login' || location.pathname === '/docs';
 
   return (
     <div className="min-h-screen bg-[#071312] text-slate-100 flex flex-col relative font-sans">
@@ -57,7 +57,7 @@ function AppLayout() {
 
       <main className={`relative z-10 ${isPublicPage ? "flex-1 w-full" : "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24"}`}>
         <Routes>
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
           <Route path="/landing" element={<Landing />} />
           <Route path="/docs" element={<Docs />} />
           <Route path="/login" element={<Login />} />

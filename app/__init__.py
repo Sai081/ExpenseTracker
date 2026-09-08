@@ -24,7 +24,8 @@ def create_app():
         'http://localhost:3000',
         'http://127.0.0.1:3000',
         'https://expense-trackercom.vercel.app',
-        re.compile(r"^https://.*\.vercel\.app$")
+        re.compile(r"^https://.*\.vercel\.app$"),
+        re.compile(r"^https://.*\.onrender\.com$")
     ]
     frontend_url = os.getenv('FRONTEND_URL', '')
     if frontend_url:
@@ -42,9 +43,10 @@ def create_app():
 
     CORS(
         app,
-        resources={r"/api/*": {"origins": allowed_origins}},
+        resources={r"/api/*": {"origins": allowed_origins}, r"/export/*": {"origins": allowed_origins}},
         supports_credentials=True,
-        allow_headers=["Content-Type", "Authorization", "X-Groq-Api-Key"],
+        allow_headers=["Content-Type", "Authorization", "X-Groq-Api-Key", "X-Currency", "X-Currency-Symbol", "Accept", "Origin", "X-Requested-With"],
+        expose_headers=["Content-Disposition"],
         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]
     )
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-12345')
