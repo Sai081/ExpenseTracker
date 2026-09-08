@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, request
 from flask_login import current_user
 from sqlalchemy import or_
@@ -142,6 +143,20 @@ def chat():
 
     if not message:
         return error_response("Message cannot be empty", status_code=400)
+
+    effective_key = api_key or os.getenv("GROQ_API_KEY")
+    if not effective_key:
+        return success_response(data={
+            "reply": "🔑 **Groq API Key Required**
+
+To chat with ExpenseTracker AI and get dynamic answers, please provide your free Groq API key.
+
+1. Get your free key at **[console.groq.com/keys](https://console.groq.com/keys)**
+2. Click the **'Custom Key'** / **'BYOK'** button to paste your key.
+
+Once saved, ExpenseTracker AI will dynamically answer all your financial questions!",
+            "key_required": True
+        })
 
     try:
         res = financial_chat_reply(current_user.id, message, history, api_key=api_key, client_context=client_context, currency_code=curr_code, currency_symbol=curr_sym)

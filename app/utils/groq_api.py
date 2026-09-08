@@ -13,12 +13,12 @@ GROQ_WHISPER_URL = "https://api.groq.com/openai/v1/audio/transcriptions"
 # Active Groq chat models
 DEFAULT_GROQ_MODEL = "qwen/qwen3.8-27b"
 ACTIVE_CHAT_MODELS = [
-    "qwen/qwen3.8-27b",
-    "groq/compound-mini",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
     "qwen/qwen3.6-27b",
-    "groq/compound",
-    "openai/gpt-oss-120b",
-    "openai/gpt-oss-20b"
+    "groq/compound-mini"
 ]
 DEFAULT_WHISPER_MODEL = "whisper-large-v3-turbo"
 

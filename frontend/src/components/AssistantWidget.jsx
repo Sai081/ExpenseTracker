@@ -196,6 +196,21 @@ export function AssistantWidget({ onTransactionCreated }) {
     const query = (textToSend || input).trim();
     if (!query || loading) return;
 
+    if (!hasKey) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'user', content: query },
+        {
+          role: 'assistant',
+          content: '🔑 **Groq API Key Required**\n\nTo chat with ExpenseTracker AI and get dynamic answers, please configure your free Groq API key.\n\nTap below to enter your key:',
+          keyRequired: true
+        }
+      ]);
+      setInput('');
+      if (openModal) openModal();
+      return;
+    }
+
     const newMessages = [...messages, { role: 'user', content: query }];
     setMessages(newMessages);
     setInput('');
@@ -210,13 +225,17 @@ export function AssistantWidget({ onTransactionCreated }) {
       };
 
       const res = await api.chat(query, history, clientContext);
+      if (res.key_required && openModal) {
+        openModal();
+      }
 
       setMessages((prev) => [
         ...prev, 
         { 
           role: 'assistant', 
           content: res.reply || 'No response generated.',
-          transaction_created: res.transaction_created
+          transaction_created: res.transaction_created,
+          keyRequired: Boolean(res.key_required)
         }
       ]);
 
@@ -384,7 +403,25 @@ export function AssistantWidget({ onTransactionCreated }) {
                         : 'bg-white/[0.035] border border-white/[0.08] text-slate-200 rounded-tl-none shadow-md'
                     }`}
                   >
-                    {isUser ? msg.content : <CleanMarkdown content={msg.content} />}
+                    {isUser ? (
+                      msg.content
+                    ) : (
+                      <>
+                        <CleanMarkdown content={msg.content} />
+                        {msg.keyRequired && (
+                          <div className="mt-3 pt-2 border-t border-white/10">
+                            <button
+                              type="button"
+                              onClick={openModal}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-md transition hover:scale-105 active:scale-95 cursor-pointer"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                              <span>Enter Groq API Key</span>
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               );
