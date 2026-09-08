@@ -60,7 +60,7 @@ export function Navbar({ onOpenAddModal }) {
   };
 
   const navItems = [
-    { to: '/', label: 'Overview', icon: LayoutDashboard },
+    { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
     { to: '/transactions', label: 'Transactions', icon: History },
     { to: '/budgets', label: 'Budgets', icon: PieChart },
     { to: '/insights', label: 'Insights', icon: Sparkles },
@@ -86,7 +86,7 @@ export function Navbar({ onOpenAddModal }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
         {/* Brand & Badge */}
         <div className="flex items-center gap-6">
-          <NavLink to="/" className="flex items-center gap-3 group">
+          <NavLink to={user ? "/dashboard" : "/"} className="flex items-center gap-3 group">
             <div className="relative p-1 rounded-2xl bg-white/[0.03] border border-white/[0.1] shadow-lg group-hover:scale-105 transition-transform duration-300">
               <BrandLogo className="w-8 h-8" />
             </div>
@@ -103,8 +103,6 @@ export function Navbar({ onOpenAddModal }) {
             </div>
           </NavLink>
 
-
-
           {/* Navigation Pill Container */}
           <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
             {navItems.map((item) => {
@@ -112,7 +110,7 @@ export function Navbar({ onOpenAddModal }) {
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === '/'}
+                  end={item.to === '/dashboard'}
                   className={({ isActive }) =>
                     `flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold tracking-wide transition-all duration-200 ${
                       isActive
@@ -208,7 +206,7 @@ export function Navbar({ onOpenAddModal }) {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === '/dashboard'}
               className={({ isActive }) => `flex min-w-0 flex-1 flex-col items-center gap-1 py-1.5 text-[10px] font-semibold transition ${isActive ? 'text-cyan-200' : 'text-slate-500'}`}
             >
               <Icon className="w-4 h-4" />

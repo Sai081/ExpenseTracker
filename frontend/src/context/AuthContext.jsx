@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { api, setStoredAuthToken } from '../lib/api';
+import { api, setStoredAuthToken, getStoredAuthToken } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -47,6 +47,9 @@ export function AuthProvider({ children }) {
         if (currentToken && currentToken !== "demo_token") {
           const profile = await api.getMe().catch(() => null);
           if (profile && profile.email !== "demo@expensetracker.local") {
+            if (profile.token) {
+              setStoredAuthToken(profile.token);
+            }
             setUser(profile);
           } else {
             setStoredAuthToken("");
@@ -140,6 +143,9 @@ export function AuthProvider({ children }) {
     }
 
     const res = await api.login(email, password);
+    if (res && res.token) {
+      setStoredAuthToken(res.token);
+    }
     setUser(res);
   };
 
@@ -174,6 +180,9 @@ export function AuthProvider({ children }) {
     }
 
     const res = await api.register(email, password, username);
+    if (res && res.token) {
+      setStoredAuthToken(res.token);
+    }
     setUser(res);
     return { success: true };
   };
@@ -224,19 +233,21 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        isDemo,
-        signInWithGoogle,
-        signInWithGoogleDirect,
-        signInWithEmail,
-        signUpWithEmail,
-        signInDemo,
-        updateLocalUser,
-        signOut,
-        isSupabaseConfigured
-      }}
+      value={
+        {
+          user,
+          loading,
+          isDemo,
+          signInWithGoogle,
+          signInWithGoogleDirect,
+          signInWithEmail,
+          signUpWithEmail,
+          signInDemo,
+          updateLocalUser,
+          signOut,
+          isSupabaseConfigured
+        }
+      }
     >
       {children}
     </AuthContext.Provider>

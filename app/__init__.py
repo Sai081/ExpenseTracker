@@ -54,8 +54,15 @@ def create_app():
     db_url = os.getenv('DATABASE_URL', '')
     if db_url.startswith('postgres://'):
         db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    if not db_url:
+        db_url = 'sqlite:///expense_tracker.db'
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    is_prod = bool(os.getenv('FLASK_ENV') == 'production' or os.getenv('RENDER') or os.getenv('VERCEL'))
+    if is_prod:
+        app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+        app.config['SESSION_COOKIE_SECURE'] = True
 
     db.init_app(app)
     login_manager.init_app(app)

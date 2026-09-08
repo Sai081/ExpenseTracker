@@ -37,7 +37,8 @@ function AppLayout() {
     setRefreshKey((k) => k + 1);
   };
 
-  const isPublicPage = (!user && location.pathname === '/') || location.pathname === '/landing' || location.pathname === '/login' || location.pathname === '/docs';
+  // Standalone marketing and sign-in routes that render their own headers and full-bleed layout
+  const isStandaloneView = location.pathname === '/landing' || location.pathname === '/login' || (!user && location.pathname === '/');
 
   return (
     <div className="min-h-screen bg-[#071312] text-slate-100 flex flex-col relative font-sans">
@@ -51,11 +52,11 @@ function AppLayout() {
         <div className="ambient-orb animate-drift-c w-[520px] h-[520px] -bottom-48 left-1/4 bg-gradient-to-tr from-emerald-500/8 via-cyan-500/6 to-transparent" />
       </div>
 
-      {user && !isPublicPage && (
+      {user && !isStandaloneView && (
         <Navbar onOpenAddModal={() => setIsAddOpen(true)} />
       )}
 
-      <main className={`relative z-10 ${isPublicPage ? "flex-1 w-full" : "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24"}`}>
+      <main className={`relative z-10 ${isStandaloneView ? "flex-1 w-full" : "flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-24"}`}>
         <Routes>
           <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
           <Route path="/landing" element={<Landing />} />
@@ -130,7 +131,7 @@ function AppLayout() {
       </main>
 
       {/* Logout Option on the very bottom of the app */}
-      {user && !isPublicPage && (
+      {user && !isStandaloneView && (
         <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 border-t border-white/[0.06] flex items-center justify-between text-xs text-slate-400 font-mono">
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -149,8 +150,6 @@ function AppLayout() {
           </button>
         </footer>
       )}
-
-
 
       {/* Global Modals & Floating Assistant */}
       {user && (

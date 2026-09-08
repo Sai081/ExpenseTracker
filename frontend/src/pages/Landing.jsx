@@ -21,7 +21,7 @@ const spendRows = [
 
 export function Landing() {
   const navigate = useNavigate();
-  const { signInDemo = async () => {} } = useAuth() || {};
+  const { user = null, signInDemo = async () => {} } = useAuth() || {};
   const [demoLoading, setDemoLoading] = useState(false);
   const [activeDemo, setActiveDemo] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -67,7 +67,7 @@ export function Landing() {
       >
         <div className="absolute inset-x-0 top-0 h-px bg-white/10 pointer-events-none" />
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3.5">
-          <Link to="/" className="group flex items-center gap-2.5 sm:gap-3" aria-label="ExpenseTracker home">
+          <Link to={user ? "/dashboard" : "/"} className="group flex items-center gap-2.5 sm:gap-3" aria-label="ExpenseTracker home">
             <div className="relative p-1 rounded-2xl bg-white/[0.03] border border-white/[0.1] shadow-lg group-hover:scale-105 transition-transform duration-300">
               <BrandLogo className="h-7 w-7 sm:h-8 sm:w-8" />
             </div>
@@ -123,16 +123,16 @@ export function Landing() {
           {/* Right Action Buttons */}
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
-              to="/login"
+              to={user ? "/dashboard" : "/login"}
               className="px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] transition-all"
             >
-              Sign in
+              {user ? "Dashboard" : "Sign in"}
             </Link>
             <Link
-              to="/login"
+              to={user ? "/dashboard" : "/login"}
               className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-bold text-xs shadow-[0_10px_25px_-5px_rgba(16,185,129,0.35)] hover:shadow-[0_15px_30px_-5px_rgba(16,185,129,0.45)] transition-all active:scale-[0.98]"
             >
-              <span>Get Started</span>
+              <span>{user ? "Go to Dashboard" : "Get Started"}</span>
               <ArrowRight className="h-3.5 w-3.5 stroke-[2.5]" />
             </Link>
 
@@ -204,8 +204,8 @@ export function Landing() {
             </p>
 
             <div className="mt-8 sm:mt-9 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
-              <Link to="/login" className="landing-button landing-button-primary w-full sm:w-auto px-5 py-3 text-sm">
-                <Sparkles className="h-4 w-4" /> Get Started Free <ArrowRight className="h-4 w-4" />
+              <Link to={user ? "/dashboard" : "/login"} className="landing-button landing-button-primary w-full sm:w-auto px-5 py-3 text-sm">
+                <Sparkles className="h-4 w-4" /> {user ? "Go to Dashboard" : "Get Started Free"} <ArrowRight className="h-4 w-4" />
               </Link>
               <a 
                 href="#how-it-works" 
@@ -413,8 +413,8 @@ export function Landing() {
               No judgment, no noise, no financial theater. Just a private workspace that helps you stay in the loop.
             </p>
           </div>
-          <Link to="/login" className="landing-button landing-button-primary shrink-0 w-full sm:w-auto px-5 py-3 text-sm">
-            Start with a clean slate <ArrowRight className="h-4 w-4" />
+          <Link to={user ? "/dashboard" : "/login"} className="landing-button landing-button-primary shrink-0 w-full sm:w-auto px-5 py-3 text-sm">
+            {user ? "Go to Dashboard" : "Start with a clean slate"} <ArrowRight className="h-4 w-4" />
           </Link>
         </section>
       </main>

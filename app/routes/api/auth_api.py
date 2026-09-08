@@ -46,6 +46,7 @@ def register():
         return error_response(f"Failed to register user: {str(e)}", status_code=500)
 
     login_user(new_user)
+    token = f"user_token_{new_user.id}_{secrets.token_hex(16)}"
 
     return success_response(
         data={
@@ -53,6 +54,7 @@ def register():
             "username": new_user.username,
             "email": new_user.email,
             "avatar_url": new_user.avatar_url,
+            "token": token,
             "is_google": False,
             "has_password": True
         },
@@ -75,6 +77,7 @@ def login():
         return error_response("Invalid email or password", status_code=401)
 
     login_user(user, remember=remember)
+    token = f"user_token_{user.id}_{secrets.token_hex(16)}"
 
     return success_response(
         data={
@@ -82,6 +85,7 @@ def login():
             "username": user.username,
             "email": user.email,
             "avatar_url": user.avatar_url,
+            "token": token,
             "is_google": bool(user.supabase_id or user.password is None),
             "has_password": user.password is not None
         },
@@ -158,11 +162,13 @@ def get_me():
     is_google = bool(current_user.supabase_id or current_user.password is None)
     has_password = current_user.password is not None
 
+    token = f"user_token_{current_user.id}_{secrets.token_hex(16)}"
     return success_response(data={
         "id": current_user.id,
         "username": current_user.username,
         "email": current_user.email,
         "avatar_url": current_user.avatar_url,
+        "token": token,
         "created_at": current_user.created_at.strftime("%Y-%m-%d") if current_user.created_at else None,
         "is_google": is_google,
         "has_password": has_password

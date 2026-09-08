@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+// Dynamic API Base URL resolution supporting environment variable and local override
+export function getApiBaseUrl() {
+  const custom = localStorage.getItem('custom_backend_api_url');
+  if (custom && custom.trim()) {
+    return custom.trim().replace(/\/+$/, '');
+  }
+  return (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
+}
+
+export function setCustomApiBaseUrl(url) {
+  if (url && url.trim()) {
+    localStorage.setItem('custom_backend_api_url', url.trim().replace(/\/+$/, ''));
+  } else {
+    localStorage.removeItem('custom_backend_api_url');
+  }
+}
 
 // Current active user ID holder for API header injection
 let _activeUserId = null;
@@ -82,7 +97,8 @@ export function setStoredAuthToken(token) {
 }
 
 async function request(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
+  const base = getApiBaseUrl();
+  const url = `${base}${endpoint}`;
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {})
@@ -116,7 +132,7 @@ async function request(endpoint, options = {}) {
     const text = await res.text().catch(() => '');
     if (text.includes('<!doctype html>') || text.includes('<html')) {
       throw new Error(
-        'Backend API returned an HTML page. Ensure your Render backend is running and VITE_API_BASE_URL points to your live API.'
+        `Backend API returned an HTML page instead of JSON from: ${url}. Please ensure your backend server is deployed and running, and VITE_API_BASE_URL (or the custom backend URL in Settings) points to your live API.`
       );
     }
   }
@@ -133,6 +149,28 @@ async function request(endpoint, options = {}) {
 }
 
 export const api = {
+  // Connection Health Check
+  checkHealth: async (customUrl = null) => {
+    const base = customUrl ? customUrl.trim().replace(/\/+$/, '') : getApiBaseUrl();
+    const candidateUrls = [
+      `${base}/health`,
+      `${base}/api/health`,
+      base.endsWith('/api') ? `${base.replace(/\/api$/, '')}/health` : null
+    ].filter(Boolean);
+
+    for (const testUrl of candidateUrls) {
+      try {
+        const res = await fetch(testUrl, { method: 'GET' });
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const json = await res.json().catch(() => ({}));
+          return { ok: true, data: json, url: testUrl };
+        }
+      } catch (e) {}
+    }
+    return { ok: false, error: `Could not reach backend API at: ${base}` };
+  },
+
   // Auth & Profile
   login: (email, password) => request('/auth/login', {
     method: 'POST',
@@ -218,7 +256,8 @@ export const api = {
   transcribeAudio: async (audioBlob) => {
     const formData = new FormData();
     formData.append('file', audioBlob, 'recording.webm');
-    const url = `${API_BASE}/ai/transcribe`;
+    const base = getApiBaseUrl();
+    const url = `${base}/ai/transcribe`;
     const headers = {};
     const authToken = getStoredAuthToken();
     if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
