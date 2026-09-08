@@ -15,7 +15,7 @@ import {
   Layers,
   Database
 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, getApiBaseUrl } from '../lib/api';
 import { useDemoWorkspace } from '../context/DemoWorkspaceContext';
 import { useCurrency } from '../context/CurrencyContext';
 
@@ -219,7 +219,7 @@ export function Transactions() {
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <a
-            href={`/api/report/export_csv?currency=${currency.code}&currency_symbol=${encodeURIComponent(currency.symbol)}`}
+            href={`${getApiBaseUrl()}/report/export_csv?currency=${currency.code}&currency_symbol=${encodeURIComponent(currency.symbol)}`}
             download
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono font-semibold rounded-xl apple-glass-pill border border-white/10 text-slate-300 hover:text-white hover:border-cyan-500/40 transition shadow-sm magnetic-btn"
           >
@@ -227,7 +227,7 @@ export function Transactions() {
             <span>Export CSV ({currency.code})</span>
           </a>
           <a
-            href={`/api/report/export_pdf?currency=${currency.code}&currency_symbol=${encodeURIComponent(currency.symbol)}`}
+            href={`${getApiBaseUrl()}/report/export_pdf?currency=${currency.code}&currency_symbol=${encodeURIComponent(currency.symbol)}`}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-mono font-semibold rounded-xl apple-glass-pill border border-white/10 text-slate-300 hover:text-white hover:border-violet-500/40 transition shadow-sm magnetic-btn"

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.expensetrackercom.twa",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7C:0F:CD:CF:45:9F:8B:26:A1:1A:1D:93:89:FE:E0:21:F6:41:A5:A8:EE:6F:E1:92:07:95:67:8B:74"
+      ]
+    }
+  }
+]

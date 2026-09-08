@@ -124,36 +124,6 @@
 .auth-page .glass-input { background: rgba(255,255,255,.035); border-color: rgba(255,255,255,.08); }
 .auth-page .glass-input:focus-within { border-color: rgba(45,212,191,.55); box-shadow: 0 0 0 3px rgba(45,212,191,.12); }
 
-/* Authenticated workspace: keep color for meaning, remove it from decoration. */
-.finance-workspace .text-violet-300,
-.finance-workspace .text-violet-400,
-.finance-workspace .text-cyan-300,
-.finance-workspace .text-cyan-400,
-.finance-workspace .text-blue-400 { color: rgb(161 161 170) !important; }
-.finance-workspace .bg-violet-500\/10,
-.finance-workspace .bg-violet-500\/15,
-.finance-workspace .bg-cyan-500\/10,
-.finance-workspace .bg-blue-500\/10 { background-color: rgba(255,255,255,.045) !important; }
-.finance-workspace .border-violet-500\/20,
-.finance-workspace .border-violet-500\/25,
-.finance-workspace .border-violet-500\/30,
-.finance-workspace .border-cyan-500\/20,
-.finance-workspace .border-cyan-500\/30,
-.finance-workspace .border-blue-500\/20 { border-color: rgba(255,255,255,.1) !important; }
-.finance-workspace .bg-gradient-to-r.from-violet-500,
-.finance-workspace .bg-gradient-to-r.from-violet-600,
-.finance-workspace .bg-gradient-to-r.from-cyan-400,
-.finance-workspace .bg-gradient-to-r.from-cyan-500 { background-image: linear-gradient(to right, rgba(255,255,255,.7), rgba(255,255,255,.24)) !important; }
-.finance-workspace .bg-gradient-to-t.from-violet-600,
-.finance-workspace .bg-gradient-to-t.from-violet-500 { background-image: linear-gradient(to top, rgba(255,255,255,.7), rgba(255,255,255,.22)) !important; }
-.finance-workspace .ring-violet-500\/40 { --tw-ring-color: rgba(255,255,255,.2) !important; }
-
-@media (prefers-reduced-motion: reduce) {
-  .landing-button, .landing-list-row { transition: none; }
-  .landing-button:hover, .landing-list-row:hover, .landing-panel:hover, .landing-window:hover { transform: none; }
-  .landing-reveal { animation: none; opacity: 1; }
-}
-
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
@@ -168,4 +138,11 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+/* Hide download banners and store links inside installed PWA apps */
+@media all and (display-mode: standalone) {
+  .pwa-hide {
+    display: none !important;
+  }
 }

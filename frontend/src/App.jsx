@@ -13,6 +13,7 @@ import { AssistantWidget } from './components/AssistantWidget';
 import { BYOKModal } from './components/BYOKModal';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { CustomCursor } from './components/CustomCursor';
+import { PWAInstallBanner } from './components/PWAInstallBanner';
 
 import { Docs } from './pages/Docs';
 import { Landing } from './pages/Landing';
@@ -173,6 +174,9 @@ function AppLayout() {
           <AssistantWidget onTransactionCreated={handleTransactionCreated} />
         </>
       )}
+
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
     </div>
   );
 }

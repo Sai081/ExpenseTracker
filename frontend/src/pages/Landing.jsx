@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowDownLeft, ArrowRight, ArrowUpRight, BarChart3, CheckCheck, ChevronRight,
-  Copy, CreditCard, Lock, Mic, MoreHorizontal, Play, Plus, Sparkles, Wallet, X, Menu
+  Copy, CreditCard, Lock, Mic, MoreHorizontal, Play, Plus, Sparkles, Wallet, X, Menu,
+  Download, Laptop, Monitor, Smartphone, Package
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { BrandLogo } from '../components/Navbar';
@@ -27,6 +28,20 @@ export function Landing() {
   const [copied, setCopied] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
+
+  useEffect(() => {
+    // Detect if running inside an installed PWA or standalone window
+    const checkPWA = () => {
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true ||
+        document.referrer.includes('android-app://') ||
+        new URLSearchParams(window.location.search).get('source') === 'pwa';
+      setIsPWA(isStandalone);
+    };
+    checkPWA();
+  }, []);
 
   const copyPayload = async () => {
     await navigator.clipboard?.writeText(JSON.stringify({ amount: 450, category: 'Food & Dining', payment_method: 'UPI' }, null, 2));
@@ -55,7 +70,7 @@ export function Landing() {
   return (
     <div className="landing-page relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#071312] text-white selection:bg-cyan-500/30 selection:text-cyan-100">
       <div className="landing-noise pointer-events-none fixed inset-0 z-0" />
-      <div className="landing-glow pointer-events-none fixed left-1/2 top-[-20rem] z-0 h-[32rem] sm:h-[42rem] w-[90vw] max-w-[50rem] -translate-x-1/2 rounded-full bg-emerald-500/[0.08] blur-[120px]" />
+      <div className="landing-glow pointer-events-none fixed left-1/2 top-[-20rem] z-0 h-[32rem] sm:h-[42rem] w-[90vw] max-w-[50rem] -translate-x-1/2 rounded-full bg-emerald-500/[0.08] blur-[120px] your-money-glow" />
 
       {/* Pinned Responsive Navbar */}
       <header
@@ -106,6 +121,14 @@ export function Landing() {
             >
               Voice Ledger
             </button>
+            {!isPWA && (
+              <button
+                onClick={(e) => scrollToSection(e, 'downloads')}
+                className="pwa-hide px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.05] transition-all duration-200"
+              >
+                Apps
+              </button>
+            )}
             <Link
               to="/docs"
               className="px-3.5 py-1.5 rounded-full text-xs font-semibold text-cyan-300 hover:text-cyan-200 hover:bg-cyan-500/10 transition-all duration-200"
@@ -168,6 +191,14 @@ export function Landing() {
             >
               Voice Ledger
             </button>
+            {!isPWA && (
+              <button
+                onClick={(e) => scrollToSection(e, 'downloads')}
+                className="w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/[0.05] transition"
+              >
+                Apps & Downloads
+              </button>
+            )}
             <Link
               to="/docs"
               onClick={() => setMobileMenuOpen(false)}
@@ -401,6 +432,133 @@ export function Landing() {
             </div>
           </div>
         </section>
+
+        {/* Native Downloads & Apps Section (Shown only on web, hidden inside installed PWA) */}
+        {!isPWA && (
+          <section className="pwa-hide landing-reveal py-16 sm:py-24 border-t border-white/[0.08]" id="downloads" style={{ '--reveal-delay': '200ms' }}>
+            <div className="mb-10 sm:mb-12 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <p className="landing-label">Multi-Platform Ecosystem</p>
+                <h2 className="mt-2.5 max-w-2xl font-display text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight">
+                  Available everywhere you work.
+                </h2>
+              </div>
+              <p className="max-w-xs text-xs sm:text-sm leading-relaxed text-neutral-400">
+                Install as a high-performance desktop or mobile application with offline support and zero browser overhead.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+              {/* macOS */}
+              <div className="landing-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <Laptop className="w-6 h-6 text-cyan-300" />
+                  </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="font-display font-bold text-base text-white">macOS App</h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">macOS</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Double-clickable standalone desktop app bundle with native macOS Dock telemetry icon.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-neutral-500">12 KB .zip</span>
+                  <a
+                    href="/downloads/ExpenseTracker-macOS.zip"
+                    download
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-cyan-500/20 text-white hover:text-cyan-200 border border-white/10 hover:border-cyan-400/30 text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Windows */}
+              <div className="landing-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <Monitor className="w-6 h-6 text-emerald-300" />
+                  </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="font-display font-bold text-base text-white">Windows 10/11</h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">MSIX / PC</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Hosted Windows application package with AppxManifest and one-click PowerShell installer.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-neutral-500">22 KB .zip</span>
+                  <a
+                    href="/downloads/ExpenseTracker-Windows.zip"
+                    download
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-emerald-500/20 text-white hover:text-emerald-200 border border-white/10 hover:border-emerald-400/30 text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Android */}
+              <div className="landing-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between group">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-400/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <Smartphone className="w-6 h-6 text-teal-300" />
+                  </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="font-display font-bold text-base text-white">Android App</h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.06] text-slate-300">TWA / APK</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Trusted Web Activity project with Digital Asset Links and Android Studio build files.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-neutral-500">7 KB .zip</span>
+                  <a
+                    href="/downloads/ExpenseTracker-Android-TWA.zip"
+                    download
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.08] hover:bg-teal-500/20 text-white hover:text-teal-200 border border-white/10 hover:border-teal-400/30 text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Universal Bundle */}
+              <div className="landing-panel rounded-3xl p-5 sm:p-6 flex flex-col justify-between group border-cyan-400/20">
+                <div>
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-emerald-500/20 border border-cyan-400/30 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                    <Package className="w-6 h-6 text-cyan-200" />
+                  </div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <h3 className="font-display font-bold text-base text-white">Universal Bundle</h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-200">All Platforms</span>
+                  </div>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Complete multi-platform distribution containing macOS app, Windows MSIX, Android TWA, and iOS wrapper.
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between">
+                  <span className="text-[11px] font-mono text-neutral-500">41 KB .zip</span>
+                  <a
+                    href="/downloads/ExpenseTracker-Installable-Packages.zip"
+                    download
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Download All</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Privacy & Sovereignty Section */}
         <section className="landing-reveal landing-panel flex flex-col items-start justify-between gap-6 sm:gap-7 p-6 sm:p-10 rounded-3xl sm:flex-row sm:items-center" id="privacy" style={{ '--reveal-delay': '240ms' }}>

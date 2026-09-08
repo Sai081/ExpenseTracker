@@ -1,0 +1,23 @@
+#!/bin/bash
+URL="https://expense-trackercom.vercel.app/"
+
+# Try Chrome in app mode (provides true standalone window experience)
+if [ -d "/Applications/Google Chrome.app" ]; then
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --app="$URL" &
+    exit 0
+fi
+
+# Try Microsoft Edge in app mode
+if [ -d "/Applications/Microsoft Edge.app" ]; then
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge" --app="$URL" &
+    exit 0
+fi
+
+# Try Brave Browser in app mode
+if [ -d "/Applications/Brave Browser.app" ]; then
+    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser" --app="$URL" &
+    exit 0
+fi
+
+# Fallback to opening in default browser
+open "$URL"
