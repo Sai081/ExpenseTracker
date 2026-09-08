@@ -85,7 +85,7 @@ export function AssistantWidget({ onTransactionCreated }) {
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
 
@@ -104,6 +104,10 @@ export function AssistantWidget({ onTransactionCreated }) {
 
     recognition.onerror = (event) => {
       console.warn('Speech error:', event.error);
+      if (event.error === 'no-speech') {
+        setAudioStatus('Waiting for speech... speak anytime');
+        return;
+      }
       setIsListening(false);
       setAudioStatus('');
     };

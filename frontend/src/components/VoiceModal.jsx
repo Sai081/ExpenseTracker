@@ -43,20 +43,46 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const silenceTimerRef = useRef(null);
+  const isListeningRef = useRef(false);
+  const latestTranscriptRef = useRef('');
+
+  // Keep refs synced
+  useEffect(() => {
+    isListeningRef.current = isListening;
+  }, [isListening]);
+
+  useEffect(() => {
+    latestTranscriptRef.current = transcript;
+  }, [transcript]);
+
+  const stopAllRecording = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    isListeningRef.current = false;
+    setIsListening(false);
+    setAudioStatus('');
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (e) {}
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
+    }
+  };
 
   useEffect(() => {
     if (!isOpen) {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
-      }
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        try { mediaRecorderRef.current.stop(); } catch (e) {}
-      }
-      setIsListening(false);
+      stopAllRecording();
       setTranscript('');
       setParsedData(null);
       setError('');
-      setAudioStatus('');
       return;
     }
 
@@ -67,22 +93,18 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
       }
     }).catch(() => {});
 
-    if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      setError('Web Speech API requires a secure HTTPS connection. Please ensure SSL is active.');
-      return;
-    }
-
+    // Setup speech recognition instance without auto-starting immediately
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const recognition = new SpeechRecognition();
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-IN';
 
       recognition.onstart = () => {
         setIsListening(true);
         setError('');
-        setAudioStatus('Listening to speech...');
+        setAudioStatus('Listening... Speak your expense naturally');
       };
 
       recognition.onresult = (event) => {
@@ -90,45 +112,62 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
         for (let i = 0; i < event.results.length; i++) {
           current += event.results[i][0].transcript;
         }
-        setTranscript(current);
-      };
+        if (current.trim()) {
+          setTranscript(current.trim());
+          setAudioStatus('Listening to voice stream...');
 
-      recognition.onerror = (event) => {
-        console.warn('Speech recognition error:', event.error);
-        setIsListening(false);
-        setAudioStatus('');
-        if (event.error !== 'no-speech') {
-          startMediaRecorderFallback();
+          // Reset silence timer: only after user has spoken, wait 2.5s of silence to auto-parse
+          if (silenceTimerRef.current) {
+            clearTimeout(silenceTimerRef.current);
+          }
+          silenceTimerRef.current = setTimeout(() => {
+            if (isListeningRef.current) {
+              stopAllRecording();
+              triggerParse(current.trim());
+            }
+          }, 2500);
         }
       };
 
+      recognition.onerror = (event) => {
+        console.warn('Speech recognition warning:', event.error);
+        if (event.error === 'no-speech') {
+          // Do NOT stop on initial silence! Keep waiting for the user to speak
+          setAudioStatus('Waiting for your voice... Speak anytime');
+          return;
+        }
+        if (event.error === 'not-allowed') {
+          setError('Microphone permission was denied. Please allow microphone access.');
+          stopAllRecording();
+          return;
+        }
+        // Other errors: try MediaRecorder fallback
+        startMediaRecorderFallback();
+      };
+
       recognition.onend = () => {
-        setIsListening(false);
-        setAudioStatus('');
+        // If the user intended to keep listening and didn't manually stop, auto-restart
+        if (isListeningRef.current) {
+          try {
+            recognition.start();
+          } catch (e) {
+            // If already started or failed, don't crash
+          }
+        }
       };
 
       recognitionRef.current = recognition;
-
-      try {
-        recognition.start();
-      } catch (e) {
-        startMediaRecorderFallback();
-      }
-    } else {
-      startMediaRecorderFallback();
     }
 
     return () => {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
-      }
+      stopAllRecording();
     };
   }, [isOpen]);
 
   const startMediaRecorderFallback = async () => {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Microphone access is unavailable. Modern browsers require an HTTPS connection for audio recording.');
+        throw new Error('Microphone access is unavailable.');
       }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
@@ -160,42 +199,48 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
 
       recorder.start();
       mediaRecorderRef.current = recorder;
+      isListeningRef.current = true;
       setIsListening(true);
-      setAudioStatus('Recording audio (Groq Whisper v3)...');
+      setAudioStatus('Recording audio stream (Groq Whisper v3)...');
     } catch (err) {
       setError('Microphone permission required for voice entry.');
-      setIsListening(false);
-      setAudioStatus('');
+      stopAllRecording();
     }
   };
 
   const toggleListening = () => {
     if (isListening) {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch (e) {}
+      // User tapped stop: stop recording and trigger parse if transcript exists
+      const currentText = latestTranscriptRef.current;
+      stopAllRecording();
+      if (currentText && currentText.trim()) {
+        triggerParse(currentText.trim());
+      } else {
+        setAudioStatus('Recording stopped.');
       }
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        try { mediaRecorderRef.current.stop(); } catch (e) {}
-      }
-      setIsListening(false);
-      setAudioStatus('');
     } else {
+      // User tapped start: reset and begin listening
       setTranscript('');
       setParsedData(null);
       setError('');
+      isListeningRef.current = true;
+      setIsListening(true);
+      setAudioStatus('Listening... Speak now');
+
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
-          setIsListening(true);
           return;
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Recognition start failed, falling back to MediaRecorder:', e);
+        }
       }
       startMediaRecorderFallback();
     }
   };
 
   const triggerParse = async (textToParse) => {
-    const query = (textToParse || transcript).trim();
+    const query = (textToParse || transcript || latestTranscriptRef.current).trim();
     if (!query) return;
     setParsing(true);
     setError('');
@@ -329,7 +374,7 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
         <div className="flex flex-col items-center justify-center py-4">
           <button
             onClick={toggleListening}
-            className={`relative flex items-center justify-center w-20 h-20 rounded-full transition-all duration-300 shadow-2xl ${
+            className={`relative flex items-center justify-center w-20 h-20 rounded-full transition-all duration-300 shadow-2xl cursor-pointer ${
               isListening
                 ? 'bg-rose-500 text-white shadow-rose-500/40 scale-110'
                 : 'bg-gradient-to-tr from-violet-600 via-purple-600 to-fuchsia-600 hover:scale-105 text-white shadow-violet-600/40'
@@ -361,11 +406,11 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
             ))}
           </div>
 
-          <p className="mt-3 text-xs sm:text-sm font-semibold text-slate-200 font-mono">
+          <p className="mt-3 text-xs sm:text-sm font-semibold text-slate-200 font-mono text-center">
             {audioStatus || (isListening ? 'Listening... Speak naturally' : transcript ? 'Tap mic to re-record' : 'Tap mic to start speaking')}
           </p>
           <p className="mt-1 text-[11px] text-slate-500 text-center font-mono">
-            "Spent 450 rupees for lunch with team via UPI"
+            e.g. "Spent 450 rupees for lunch with team via UPI"
           </p>
         </div>
 
@@ -550,3 +595,5 @@ export function VoiceModal({ isOpen, onClose, onTransactionCreated }) {
     </div>
   );
 }
+
+export default VoiceModal;

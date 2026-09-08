@@ -51,7 +51,7 @@ export function Chat() {
     if (!SpeechRecognition) return;
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-IN';
 
@@ -70,6 +70,10 @@ export function Chat() {
 
     recognition.onerror = (e) => {
       console.warn('Speech recognition error:', e.error);
+      if (e.error === 'no-speech') {
+        setRecordingStatus('Waiting for speech... speak anytime');
+        return;
+      }
       setIsListening(false);
       setRecordingStatus('');
     };
